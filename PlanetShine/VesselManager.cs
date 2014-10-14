@@ -198,8 +198,11 @@ namespace PlanetShine
 				StartDebug ();
 		}
 
-		public void Update()
+		public void FixedUpdate()
 		{
+			if (FlightGlobals.ActiveVessel == null)
+				return;
+
 			if (config.debug) {
 				performanceTimerStep = 0;
 				performanceTimer.Reset();
