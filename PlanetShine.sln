@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlanetShine", "PlanetShine\PlanetShine.csproj", "{B5F61AB6-8A51-40E1-987A-EE4CEE9AB07A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B5F61AB6-8A51-40E1-987A-EE4CEE9AB07A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5F61AB6-8A51-40E1-987A-EE4CEE9AB07A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5F61AB6-8A51-40E1-987A-EE4CEE9AB07A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5F61AB6-8A51-40E1-987A-EE4CEE9AB07A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = PlanetShine\PlanetShine.csproj
+	EndGlobalSection
+EndGlobal

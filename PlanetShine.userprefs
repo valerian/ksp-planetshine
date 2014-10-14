@@ -1,0 +1,16 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="PlanetShine\Config.cs">
+    <Files>
+      <File FileName="PlanetShine\Config.cs" Line="4" Column="4" />
+      <File FileName="PlanetShine\VesselManager.cs" Line="1" Column="1" />
+      <File FileName="PlanetShine\Utils.cs" Line="1" Column="1" />
+      <File FileName="PlanetShine\GUI.cs" Line="1" Column="1" />
+      <File FileName="PlanetShine\CelestialBodyInfo.cs" Line="73" Column="73" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
