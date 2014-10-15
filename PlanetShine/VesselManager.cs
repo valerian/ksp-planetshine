@@ -80,6 +80,7 @@ namespace PlanetShine
 				albedoLights[i].AddComponent<Light>();
 				albedoLights[i].light.type = LightType.Directional;
 				albedoLights[i].light.cullingMask = (1 << 0);
+				albedoLights[i].light.renderMode = LightRenderMode.ForceVertex;
 				albedoLights[i].AddComponent<MeshRenderer>();
 			}
 		}
