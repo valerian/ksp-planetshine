@@ -25,6 +25,8 @@ namespace PlanetShine
 		public static GameObject[] albedoLights;
 		public static DynamicAmbientLight ambientLight;
 
+		public static bool renderEnabled = true;
+
 		// for debug only
 		private System.Diagnostics.Stopwatch performanceTimer = new System.Diagnostics.Stopwatch();
 		private int performanceTimerStep = 0;
@@ -61,9 +63,9 @@ namespace PlanetShine
 		public float lightDistanceEffect;
 		public Vector3 visibleLightVesselDirection;
 		public float lightIntensity;
- 
+		public Color vacuumColor;
 
-		private void StartDebug()
+		private void CreateDebugLines()
 		{
 			debugLineLightDirection = Utils.CreateDebugLine(Color.white, Color.green);
 			debugLineSunDirection = Utils.CreateDebugLine(Color.white, Color.yellow);
@@ -151,7 +153,11 @@ namespace PlanetShine
 				debugLineBodyDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
 
 			}
-				
+
+			debugLineLightDirection.enabled = config.debug;
+			debugLineBodyDirection.enabled = config.debug;
+			debugLineSunDirection.enabled = config.debug;
+
 			lightIntensity = config.baseAlbedoIntensity / config.albedoLightsQuantity;
 			lightIntensity *= visibleLightRatio * boostedVisibleLightAngleEffect * atmosphereReflectionEffect * lightDistanceEffect * bodyIntensity;
 
@@ -168,12 +174,15 @@ namespace PlanetShine
 					albedoLight.light.intensity *= 1f + (areaSpreadAngleRatio * areaSpreadAngleRatio * config.areaSpreadIntensityMultiplicator);
 				}
 				albedoLight.light.color = bodyColor;
-				albedoLight.light.enabled = true;
+				albedoLight.light.enabled = renderEnabled;
 				i++;
 			}
 
 			if (ambientLight != null) {
-				ambientLight.vacuumAmbientColor = atmosphereAmbientEffect * visibleLightAngleEffect * bodyColor + new Color(config.vacuumLightLevel,config.vacuumLightLevel,config.vacuumLightLevel);
+				vacuumColor.r = vacuumColor.g = vacuumColor.b = config.vacuumLightLevel;
+				ambientLight.vacuumAmbientColor = vacuumColor;
+				if (renderEnabled)
+					ambientLight.vacuumAmbientColor += atmosphereAmbientEffect * visibleLightAngleEffect * bodyColor;
 				if (config.debug)
 					print ("PlanetShine: Vacuum level " + config.vacuumLightLevel);
 			}
@@ -194,9 +203,8 @@ namespace PlanetShine
 			}
 
 			CreateAlbedoLights ();
-
-			if (config.debug)
-				StartDebug ();
+			CreateDebugLines ();
+			vacuumColor = new Color (config.vacuumLightLevel, config.vacuumLightLevel, config.vacuumLightLevel);
 		}
 
 		public void FixedUpdate()

@@ -43,6 +43,7 @@
     <Compile Include="GUI.cs" />
     <Compile Include="VesselManager.cs" />
     <Compile Include="CelestialBodyInfo.cs" />
+    <Compile Include="ToolbarWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
