@@ -1,0 +1,36 @@
+{
+    "NAME":"PlanetShine",
+    "URL":"https://raw.githubusercontent.com/valerian/ksp-planetshine/master/PlanetShine.version",
+    "DOWNLOAD":"http://kerbal.curseforge.com/ksp-mods/224876-planetshine",
+    "GITHUB":
+    {
+        "USERNAME":"valerian",
+        "REPOSITORY":"ksp-planetshine",
+        "ALLOW_PRE_RELEASE":false,
+    },
+    "VERSION":
+    {
+        "MAJOR":0,
+        "MINOR":1,
+        "PATCH":4,
+        "BUILD":0
+    },
+    "KSP_VERSION":
+    {
+        "MAJOR":0,
+        "MINOR":24,
+        "PATCH":2
+    },
+    "KSP_VERSION_MIN":
+    {
+        "MAJOR":0,
+        "MINOR":24,
+        "PATCH":2
+    },
+    "KSP_VERSION_MAX":
+    {
+        "MAJOR":0,
+        "MINOR":25,
+        "PATCH":0
+    }
+} 
