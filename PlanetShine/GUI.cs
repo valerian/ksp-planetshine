@@ -35,11 +35,11 @@ namespace PlanetShine
 			if (!toolbarInstalled)
 				return;
 			button = ToolbarManager.Instance.add("PlanetShine", "Gui");
-			button.TexturePath = "PlanetShine/Icons/toolbar_disabled";
+			button.TexturePath = "PlanetShine/Icons/ps_disabled";
 			button.Visibility = new GameScenesVisibility(GameScenes.FLIGHT);
 			button.ToolTip = "Toggle This Button's Icon";
 			button.OnClick += (e) => {
-				button.TexturePath = buttonState ? "PlanetShine/Icons/toolbar_disabled" : "PlanetShine/Icons/toolbar_enabled";
+				button.TexturePath = buttonState ? "PlanetShine/Icons/ps_disabled" : "PlanetShine/Icons/ps_enabled";
 				buttonState = !buttonState;
 			};
 		}
