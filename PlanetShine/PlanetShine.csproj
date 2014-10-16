@@ -8,6 +8,7 @@
     <RootNamespace>PlanetShine</RootNamespace>
     <AssemblyName>PlanetShine</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <ReleaseVersion>0.1.5</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -18,6 +19,11 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="AfterBuild" />
+      </CustomCommands>
+    </CustomCommands>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -26,6 +32,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="AfterBuild" command="&quot;c:\windows\system32\xcopy.EXE&quot; /F /Y &quot;${ProjectDir}\bin\Release\PlanetShine.dll&quot; &quot;F:\dev\KSP dev\GameData\PlanetShine\Plugins&quot;" workingdir="" externalConsole="True" />
+        <Command type="BeforeExecute" command="&quot;..\..\KSP dev\KSP.exe&quot;" />
+      </CustomCommands>
+    </CustomCommands>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -41,9 +53,9 @@
     <Compile Include="Config.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="GUI.cs" />
-    <Compile Include="VesselManager.cs" />
     <Compile Include="CelestialBodyInfo.cs" />
     <Compile Include="ToolbarWrapper.cs" />
+    <Compile Include="PlanetShine.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

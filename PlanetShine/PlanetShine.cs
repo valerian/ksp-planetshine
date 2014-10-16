@@ -17,11 +17,11 @@ using UnityEngine;
 namespace PlanetShine
 {
 	[KSPAddon(KSPAddon.Startup.Flight, false)]
-	public class VesselManager : MonoBehaviour
+	public class PlanetShine : MonoBehaviour
 	{
 		// local attributes
 		private Config config = Config.Instance;
-		public static VesselManager Instance { get; private set; }
+		public static PlanetShine Instance { get; private set; }
 		public static GameObject[] albedoLights;
 		public static DynamicAmbientLight ambientLight;
 
@@ -29,7 +29,7 @@ namespace PlanetShine
 
 		// for debug only
 		private System.Diagnostics.Stopwatch performanceTimer = new System.Diagnostics.Stopwatch();
-		private int performanceTimerStep = 0;
+		public double performanceTimerLast = 0;
 
 		public static LineRenderer debugLineLightDirection = null;
 		public static LineRenderer debugLineSunDirection = null;
@@ -100,7 +100,7 @@ namespace PlanetShine
 				bodyGroundAmbient = config.celestialBodyInfos[body].atmosphereAmbientLevel;
 			}
 
-			bodyRadius = (float) body.Radius * 0.99f;
+			bodyRadius = (float) body.Radius * 0.999f;
 			bodyVesselDirection = (FlightGlobals.ActiveVessel.transform.position - body.position).normalized;
 			bodySunDirection = (body.name == "Sun") ? bodyVesselDirection : (Vector3) (FlightGlobals.Bodies[0].position - body.position).normalized;
 			vesselAltitude = (float) (FlightGlobals.ActiveVessel.transform.position - body.position).magnitude - bodyRadius;
@@ -124,25 +124,6 @@ namespace PlanetShine
 			visibleLightVesselDirection = (FlightGlobals.ActiveVessel.transform.position - visibleLightPositionAverage).normalized;
 
 			if (config.debug) {
-				print ("PlanetShine: body " + body.name);
-				print ("PlanetShine: vesselAltitude " + vesselAltitude);
-				print ("PlanetShine: visibleSurface " + visibleSurface);
-				print ("PlanetShine: sunAngle " + sunAngle);
-				print ("PlanetShine: visibleLightSunAngleMax " + visibleLightSunAngleMax);
-				print ("PlanetShine: visibleLightSunAngleMin " + visibleLightSunAngleMin);
-				print ("PlanetShine: visibleLightAngleAverage " + visibleLightAngleAverage);
-				print ("PlanetShine: visibleLightPositionAverage " + visibleLightPositionAverage);
-				print ("PlanetShine: atmosphereAmbientEffect " + atmosphereAmbientEffect);
-				print ("PlanetShine: areaSpreadAngle " + areaSpreadAngle);
-				print ("PlanetShine: areaSpreadIntensityMultiplicator " + config.areaSpreadIntensityMultiplicator);
-				print ("PlanetShine: lightRange " + lightRange);
-				print ("PlanetShine: vesselLightRangeRatio " + vesselLightRangeRatio);
-				print ("PlanetShine: visibleLightRatio " + visibleLightRatio);
-				print ("PlanetShine: visibleLightAngleEffect " + visibleLightAngleEffect);
-				print ("PlanetShine: boostedVsibleLightAngleEffect " + visibleLightAngleEffect);
-				print ("PlanetShine: atmosphereReflectionEffect " + atmosphereReflectionEffect);
-				print ("PlanetShine: lightDistanceEffect " + lightDistanceEffect);
-
 				debugLineLightDirection.SetPosition( 0, visibleLightPositionAverage );
 				debugLineLightDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
 
@@ -160,9 +141,6 @@ namespace PlanetShine
 
 			lightIntensity = config.baseAlbedoIntensity / config.albedoLightsQuantity;
 			lightIntensity *= visibleLightRatio * boostedVisibleLightAngleEffect * atmosphereReflectionEffect * lightDistanceEffect * bodyIntensity;
-
-			if (config.debug)
-				print ("PlanetShine: INTENSITY " + lightIntensity);
 
 			int i = 0;
 			foreach (GameObject albedoLight in albedoLights){
@@ -183,8 +161,6 @@ namespace PlanetShine
 				ambientLight.vacuumAmbientColor = vacuumColor;
 				if (renderEnabled)
 					ambientLight.vacuumAmbientColor += atmosphereAmbientEffect * visibleLightAngleEffect * bodyColor;
-				if (config.debug)
-					print ("PlanetShine: Vacuum level " + config.vacuumLightLevel);
 			}
 		}
 
@@ -213,7 +189,6 @@ namespace PlanetShine
 				return;
 
 			if (config.debug) {
-				performanceTimerStep = 0;
 				performanceTimer.Reset();
 				performanceTimer.Start();
 			}
@@ -222,19 +197,8 @@ namespace PlanetShine
 
 			if (config.debug) {
 				performanceTimer.Stop();
-				print ("PlanetShine: total update time " + performanceTimer.Elapsed.TotalMilliseconds);
-
-				/*if (Input.GetKeyUp (KeyCode.PageUp) == true) {
-					lightsOn = !lightsOn;
-				}*/
+				performanceTimerLast = performanceTimer.Elapsed.TotalMilliseconds;
 			}
-		}
-
-		private void TimerLog()
-		{
-			if (!config.debug)
-				return;
-			print ("PlanetShine: timer #" + performanceTimerStep++ + " : " + performanceTimer.Elapsed.TotalMilliseconds);
 		}
 	}
 }
