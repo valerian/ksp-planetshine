@@ -52,7 +52,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Utils.cs" />
-    <Compile Include="GUI.cs" />
+    <Compile Include="Gui.cs" />
     <Compile Include="CelestialBodyInfo.cs" />
     <Compile Include="ToolbarWrapper.cs" />
     <Compile Include="PlanetShine.cs" />
