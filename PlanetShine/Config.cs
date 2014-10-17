@@ -90,24 +90,25 @@ namespace PlanetShine
 			
 		public void LoadSettings()
 		{
-			var settings = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Settings.cfg").GetNode("PlanetShine");
-			var celestialBodies = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/CelestialBodies.cfg");
+            configFile = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
+            configFileNode = configFile.GetNode("PlanetShine");
+			var celestialBodies = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/CelestialBodies.cfg");
 
-			if (bool.Parse (settings.GetValue ("useAreaLight")))
+			if (bool.Parse (configFileNode.GetValue ("useAreaLight")))
 				config.albedoLightsQuantity = Config.maxAlbedoLightsQuantity;
 			else
 				config.albedoLightsQuantity = 1;
 
-			config.baseAlbedoIntensity = float.Parse(settings.GetValue("baseAlbedoIntensity"));
-			config.vacuumLightLevel = float.Parse(settings.GetValue("vacuumLightLevel"));
-			config.baseGroundAmbient = float.Parse(settings.GetValue("baseGroundAmbient"));
-			config.groundAmbientOverrideRatio = float.Parse(settings.GetValue("groundAmbientOverrideRatio"));
-			config.minAlbedoFadeAltitude = float.Parse(settings.GetValue("minAlbedoFadeAltitude"));
-			config.maxAlbedoFadeAltitude = float.Parse(settings.GetValue("maxAlbedoFadeAltitude"));
-			config.minAmbientFadeAltitude = float.Parse(settings.GetValue("minAmbientFadeAltitude"));
-			config.maxAmbientFadeAltitude = float.Parse(settings.GetValue("maxAmbientFadeAltitude"));
-			config.albedoRange = float.Parse(settings.GetValue("albedoRange"));
-			config.setQuality(int.Parse(settings.GetValue("quality")));
+			config.baseAlbedoIntensity = float.Parse(configFileNode.GetValue("baseAlbedoIntensity"));
+			config.vacuumLightLevel = float.Parse(configFileNode.GetValue("vacuumLightLevel"));
+			config.baseGroundAmbient = float.Parse(configFileNode.GetValue("baseGroundAmbient"));
+			config.groundAmbientOverrideRatio = float.Parse(configFileNode.GetValue("groundAmbientOverrideRatio"));
+			config.minAlbedoFadeAltitude = float.Parse(configFileNode.GetValue("minAlbedoFadeAltitude"));
+			config.maxAlbedoFadeAltitude = float.Parse(configFileNode.GetValue("maxAlbedoFadeAltitude"));
+			config.minAmbientFadeAltitude = float.Parse(configFileNode.GetValue("minAmbientFadeAltitude"));
+			config.maxAmbientFadeAltitude = float.Parse(configFileNode.GetValue("maxAmbientFadeAltitude"));
+			config.albedoRange = float.Parse(configFileNode.GetValue("albedoRange"));
+			config.setQuality(int.Parse(configFileNode.GetValue("quality")));
 
 			foreach (ConfigNode bodySettings in celestialBodies.GetNodes("CelestialBodyColor"))
 			{
@@ -125,6 +126,22 @@ namespace PlanetShine
 				}
 			}
 		}
+
+        public void SaveSettings()
+        {
+			configFileNode.SetValue("useAreaLight", (config.albedoLightsQuantity > 1) ? "True" : "False");
+            configFileNode.SetValue("baseAlbedoIntensity", config.baseAlbedoIntensity.ToString());
+            configFileNode.SetValue("vacuumLightLevel", config.vacuumLightLevel.ToString());
+            configFileNode.SetValue("baseGroundAmbient", config.baseGroundAmbient.ToString());
+            configFileNode.SetValue("groundAmbientOverrideRatio", config.groundAmbientOverrideRatio.ToString());
+            configFileNode.SetValue("minAlbedoFadeAltitude", config.minAlbedoFadeAltitude.ToString());
+            configFileNode.SetValue("maxAlbedoFadeAltitude", config.maxAlbedoFadeAltitude.ToString());
+            configFileNode.SetValue("minAmbientFadeAltitude", config.minAmbientFadeAltitude.ToString());
+            configFileNode.SetValue("maxAmbientFadeAltitude", config.maxAmbientFadeAltitude.ToString());
+            configFileNode.SetValue("albedoRange", config.albedoRange.ToString());
+            configFileNode.SetValue("quality", config.quality.ToString());
+            configFile.Save(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
+        }
 
 	}
 }

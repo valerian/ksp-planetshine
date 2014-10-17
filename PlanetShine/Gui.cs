@@ -39,6 +39,7 @@ namespace PlanetShine
 		private int debugWindowLabelWidth = 200;
 		private int debugWindowDataWidth = 200;
 		private int settingsLabelWidth = 100;
+        private int updateCounter = 0;
 
 
 		internal Gui() {
@@ -72,10 +73,14 @@ namespace PlanetShine
 
 		private void OnDraw(){
 			if (buttonState) {
-				configWindowPosition = GUILayout.Window (143751300, configWindowPosition, OnConfigWindow, "PlanetShine 0.1.5 - Early Beta", windowStyle);
+				configWindowPosition = GUILayout.Window (143751300, configWindowPosition, OnConfigWindow, "PlanetShine 0.2.0 - Early Beta", windowStyle);
 				if (config.debug && PlanetShine.Instance != null) {
 					debugWindowPosition = GUILayout.Window (143751301, debugWindowPosition, OnDebugWindow, "--- PLANETSHINE DEBUG ---", windowStyle);
 				}
+                if ((updateCounter % 100) == 0) {
+                    ConfigManager.Instance.SaveSettings();
+                }
+                updateCounter++;
 			}
 		}
 
@@ -299,6 +304,7 @@ namespace PlanetShine
 			VariableDebugLabel ("visibleLightVesselDirection", planetShine.visibleLightVesselDirection);
 			VariableDebugLabel ("lightIntensity", planetShine.lightIntensity);
 			VariableDebugLabel ("vacuumColor", planetShine.vacuumColor);
+			VariableDebugLabel ("Gui.updateCounter", updateCounter);
 
 			GUILayout.EndVertical(); 
 
