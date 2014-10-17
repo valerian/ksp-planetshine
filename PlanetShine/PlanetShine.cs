@@ -35,6 +35,8 @@ namespace PlanetShine
 		public static LineRenderer debugLineSunDirection = null;
 		public static LineRenderer debugLineBodyDirection = null;
 
+        public static LineRenderer[] debugLineLights = null;
+
 		// for all of the calculations of UpdateAlbedoLights
         public CelestialBody body;
         public Color bodyColor;
@@ -43,6 +45,7 @@ namespace PlanetShine
         public float bodyRadius;
 		public Vector3 bodyVesselDirection;
 		public Vector3 bodySunDirection;
+		public float vesselBodyDistance;
 		public float vesselAltitude;
 		public float visibleSurface;
 		public float sunAngle;
@@ -70,11 +73,15 @@ namespace PlanetShine
 			debugLineLightDirection = Utils.CreateDebugLine(Color.white, Color.green);
 			debugLineSunDirection = Utils.CreateDebugLine(Color.white, Color.yellow);
 			debugLineBodyDirection = Utils.CreateDebugLine(Color.white, Color.red);
+            debugLineLights = new LineRenderer[config.albedoLightsQuantity];
+			for (var i = 0; i < config.albedoLightsQuantity; i++) {
+                debugLineLights[i] = Utils.CreateDebugLine(Color.white, Color.blue);
+            }
 		}
 
 		private void CreateAlbedoLights()
 		{
-			albedoLights = new GameObject[config.albedoLightsQuantity]; 
+			albedoLights = new GameObject[Config.maxAlbedoLightsQuantity]; 
 			for (var i = 0; i < config.albedoLightsQuantity; i++){
 				if (albedoLights[i] != null)
 					Destroy (albedoLights[i]);
@@ -82,7 +89,6 @@ namespace PlanetShine
 				albedoLights[i].AddComponent<Light>();
 				albedoLights[i].light.type = LightType.Directional;
 				albedoLights[i].light.cullingMask = (1 << 0);
-				albedoLights[i].light.renderMode = LightRenderMode.ForceVertex;
 				albedoLights[i].AddComponent<MeshRenderer>();
 			}
 		}
@@ -102,22 +108,35 @@ namespace PlanetShine
 
 			bodyRadius = (float) body.Radius * 0.999f;
 			bodyVesselDirection = (FlightGlobals.ActiveVessel.transform.position - body.position).normalized;
-			bodySunDirection = (body.name == "Sun") ? bodyVesselDirection : (Vector3) (FlightGlobals.Bodies[0].position - body.position).normalized;
-			vesselAltitude = (float) (FlightGlobals.ActiveVessel.transform.position - body.position).magnitude - bodyRadius;
+			bodySunDirection = (body.name == "Sun") ?
+                bodyVesselDirection
+                : (Vector3) (FlightGlobals.Bodies[0].position - body.position).normalized;
+			vesselBodyDistance = (float) (FlightGlobals.ActiveVessel.transform.position - body.position).magnitude;
+			vesselAltitude = vesselBodyDistance - bodyRadius;
 			visibleSurface = vesselAltitude / (float) (FlightGlobals.ActiveVessel.transform.position - body.position).magnitude;
 			sunAngle = Vector3.Angle (bodySunDirection, bodyVesselDirection);
 			visibleLightSunAngleMax = 90f + (90f * visibleSurface);
 			visibleLightSunAngleMin = 90f - (90f * visibleSurface);
-			visibleLightRatio = Mathf.Clamp01(((visibleLightSunAngleMax - sunAngle) / (visibleLightSunAngleMax - visibleLightSunAngleMin)));
-			visibleLightAngleAverage = ((90f * visibleSurface) * (1f - (visibleLightRatio * (1f - (sunAngle / 180f)))));
+			visibleLightRatio = Mathf.Clamp01(((visibleLightSunAngleMax - sunAngle)
+                                               / (visibleLightSunAngleMax - visibleLightSunAngleMin)));
+			visibleLightAngleAverage = ((90f * visibleSurface) * (1f - (visibleLightRatio * (1f - (sunAngle / 270f)))));
 			visibleLightAngleEffect = Mathf.Clamp01(1f - ((sunAngle - visibleLightAngleAverage) / 90f));
 			boostedVisibleLightAngleEffect = Mathf.Clamp01(visibleLightAngleEffect + 0.3f);
-			visibleLightPositionAverage = body.position + Vector3.RotateTowards(bodyVesselDirection, bodySunDirection, visibleLightAngleAverage * 0.01745f, 0.0f) * bodyRadius;
-			atmosphereReflectionEffect = Mathf.Clamp01((1f - bodyGroundAmbient) + ((vesselAltitude - (bodyRadius * config.minAlbedoFadeAltitude)) / (bodyRadius * (config.maxAlbedoFadeAltitude - config.minAlbedoFadeAltitude))));
-			atmosphereAmbientRatio = 1f - Mathf.Clamp01((vesselAltitude - (bodyRadius * config.minAmbientFadeAltitude)) / (bodyRadius * (config.maxAmbientFadeAltitude - config.minAmbientFadeAltitude)));
+			visibleLightPositionAverage = body.position + Vector3.RotateTowards(bodyVesselDirection, bodySunDirection,
+                                                                                visibleLightAngleAverage * 0.01745f, 0.0f) * bodyRadius;
+			atmosphereReflectionEffect = Mathf.Clamp01((1f - bodyGroundAmbient) +
+                                                       ((vesselAltitude - (bodyRadius * config.minAlbedoFadeAltitude))
+                                                        / (bodyRadius * (config.maxAlbedoFadeAltitude
+                                                                         - config.minAlbedoFadeAltitude))));
+			atmosphereAmbientRatio = 1f - Mathf.Clamp01((vesselAltitude - (bodyRadius * config.minAmbientFadeAltitude))
+                                                        / (bodyRadius * (config.maxAmbientFadeAltitude
+                                                                         - config.minAmbientFadeAltitude)));
 			atmosphereAmbientEffect = bodyGroundAmbient * config.baseGroundAmbient * atmosphereAmbientRatio;
-			areaSpreadAngle = (1f + (0.4f * atmosphereAmbientRatio)) * config.areaSpreadAngleMax * Mathf.Clamp01((bodyRadius / ((visibleLightPositionAverage - FlightGlobals.ActiveVessel.transform.position).magnitude * 2))) * (visibleLightRatio * (1f - (sunAngle / 180f)));
-			areaSpreadAngleRatio = Mathf.Clamp01(areaSpreadAngle / config.areaSpreadAngleMax);
+            areaSpreadAngle = Math.Min(45f, (visibleLightRatio * (1f - (sunAngle / 270f)))
+                                       * Mathf.Rad2Deg * (float) Math.Acos(Math.Sqrt((vesselBodyDistance * vesselBodyDistance)
+                                                                                     - (bodyRadius * bodyRadius))
+                                                                           / vesselBodyDistance));
+			areaSpreadAngleRatio = Mathf.Clamp01(areaSpreadAngle / 45f);
 			lightRange = bodyRadius * config.albedoRange;
 			vesselLightRangeRatio = (float) vesselAltitude / lightRange;
 			lightDistanceEffect = 1.0f / (1.0f + 25.0f * vesselLightRangeRatio * vesselLightRangeRatio);
@@ -138,29 +157,52 @@ namespace PlanetShine
 			debugLineLightDirection.enabled = config.debug;
 			debugLineBodyDirection.enabled = config.debug;
 			debugLineSunDirection.enabled = config.debug;
+            foreach (LineRenderer line in debugLineLights)
+                line.enabled = false;
 
 			lightIntensity = config.baseAlbedoIntensity / config.albedoLightsQuantity;
-			lightIntensity *= visibleLightRatio * boostedVisibleLightAngleEffect * atmosphereReflectionEffect * lightDistanceEffect * bodyIntensity;
-
+			lightIntensity *= visibleLightRatio * boostedVisibleLightAngleEffect * atmosphereReflectionEffect
+                * lightDistanceEffect * bodyIntensity;
+            if (config.albedoLightsQuantity > 1 )
+                lightIntensity *= 1f + (areaSpreadAngleRatio * areaSpreadAngleRatio * 0.5f);
+            
 			int i = 0;
 			foreach (GameObject albedoLight in albedoLights){
+                albedoLight.light.renderMode = config.useVertex ? LightRenderMode.ForceVertex : LightRenderMode.ForcePixel;
 				albedoLight.light.intensity = lightIntensity;
 				albedoLight.light.transform.forward = visibleLightVesselDirection;
 				if (config.albedoLightsQuantity > 1 ) { // Spread the lights, but only if there are more than one
-					albedoLight.light.transform.forward = Quaternion.AngleAxis (areaSpreadAngle, Vector3.Cross (bodyVesselDirection, bodySunDirection).normalized) * albedoLight.light.transform.forward;
-					albedoLight.light.transform.forward = Quaternion.AngleAxis (i * (360f / config.albedoLightsQuantity), bodyVesselDirection) * albedoLight.light.transform.forward;
-					albedoLight.light.intensity *= 1f + (areaSpreadAngleRatio * areaSpreadAngleRatio * config.areaSpreadIntensityMultiplicator);
-				}
+					albedoLight.light.transform.forward = Quaternion.AngleAxis (areaSpreadAngle,
+                                                                                Vector3.Cross (bodyVesselDirection,
+                                                                                               bodySunDirection).normalized)
+                        * albedoLight.light.transform.forward;
+					albedoLight.light.transform.forward = Quaternion.AngleAxis (i * (360f / config.albedoLightsQuantity),
+                                                                                visibleLightVesselDirection)
+                        * albedoLight.light.transform.forward;
+                    debugLineLights[i].enabled = config.debug;
+                    debugLineLights[i].SetPosition( 0, FlightGlobals.ActiveVessel.transform.position
+                                                    - albedoLight.light.transform.forward * 10000 );
+                    debugLineLights[i].SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );                    
+				} else {
+                    debugLineLights[1].enabled = config.debug;
+                    debugLineLights[1].SetPosition( 0, FlightGlobals.ActiveVessel.transform.position
+                                                    - albedoLight.light.transform.forward * 10000 );
+                    debugLineLights[1].SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
+                }
+                      
 				albedoLight.light.color = bodyColor;
-				albedoLight.light.enabled = renderEnabled;
+				albedoLight.light.enabled = renderEnabled && (i < config.albedoLightsQuantity);
 				i++;
 			}
 
 			if (ambientLight != null) {
 				vacuumColor.r = vacuumColor.g = vacuumColor.b = config.vacuumLightLevel;
 				ambientLight.vacuumAmbientColor = vacuumColor;
-				if (renderEnabled)
+				if (renderEnabled) {
 					ambientLight.vacuumAmbientColor += atmosphereAmbientEffect * visibleLightAngleEffect * bodyColor;
+                    RenderSettings.ambientLight = (ambientLight.vacuumAmbientColor * config.groundAmbientOverrideRatio)
+                        + (RenderSettings.ambientLight * (1f - config.groundAmbientOverrideRatio));
+                }
 			}
 		}
 
@@ -183,7 +225,7 @@ namespace PlanetShine
 			vacuumColor = new Color (config.vacuumLightLevel, config.vacuumLightLevel, config.vacuumLightLevel);
 		}
 
-		public void FixedUpdate()
+		public void LateUpdate()
 		{
 			if (FlightGlobals.ActiveVessel == null)
 				return;
@@ -192,7 +234,7 @@ namespace PlanetShine
 				performanceTimer.Reset();
 				performanceTimer.Start();
 			}
-
+            
 			UpdateAlbedoLights();
 
 			if (config.debug) {
