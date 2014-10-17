@@ -108,6 +108,7 @@ namespace PlanetShine
 			config.minAmbientFadeAltitude = float.Parse(configFileNode.GetValue("minAmbientFadeAltitude"));
 			config.maxAmbientFadeAltitude = float.Parse(configFileNode.GetValue("maxAmbientFadeAltitude"));
 			config.albedoRange = float.Parse(configFileNode.GetValue("albedoRange"));
+			config.useVertex = bool.Parse(configFileNode.GetValue("useVertex"));
 			config.setQuality(int.Parse(configFileNode.GetValue("quality")));
 
 			foreach (ConfigNode bodySettings in celestialBodies.GetNodes("CelestialBodyColor"))
@@ -139,6 +140,7 @@ namespace PlanetShine
             configFileNode.SetValue("minAmbientFadeAltitude", config.minAmbientFadeAltitude.ToString());
             configFileNode.SetValue("maxAmbientFadeAltitude", config.maxAmbientFadeAltitude.ToString());
             configFileNode.SetValue("albedoRange", config.albedoRange.ToString());
+            configFileNode.SetValue("useVertex", config.useVertex ? "True" : "False");
             configFileNode.SetValue("quality", config.quality.ToString());
             configFile.Save(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
         }
