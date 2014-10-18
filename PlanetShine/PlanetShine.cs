@@ -76,7 +76,7 @@ namespace PlanetShine
 			debugLineSunDirection = Utils.CreateDebugLine(Color.white, Color.yellow);
 			debugLineBodyDirection = Utils.CreateDebugLine(Color.white, Color.red);
             debugLineLights = new LineRenderer[Config.maxAlbedoLightsQuantity];
-			for (var i = 0; i < config.albedoLightsQuantity; i++) {
+			for (var i = 0; i < Config.maxAlbedoLightsQuantity; i++) {
                 debugLineLights[i] = Utils.CreateDebugLine(Color.white, Color.blue);
             }
 		}
@@ -84,7 +84,7 @@ namespace PlanetShine
 		private void CreateAlbedoLights()
 		{
 			albedoLights = new GameObject[Config.maxAlbedoLightsQuantity]; 
-			for (var i = 0; i < config.albedoLightsQuantity; i++){
+			for (var i = 0; i < Config.maxAlbedoLightsQuantity; i++){
 				if (albedoLights[i] != null)
 					Destroy (albedoLights[i]);
 				albedoLights[i] = new GameObject();
