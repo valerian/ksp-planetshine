@@ -68,12 +68,14 @@ namespace PlanetShine
 		public float lightIntensity;
 		public Color vacuumColor;
 
+        public int fixedUpdateCounter = 0; 
+
 		private void CreateDebugLines()
 		{
 			debugLineLightDirection = Utils.CreateDebugLine(Color.white, Color.green);
 			debugLineSunDirection = Utils.CreateDebugLine(Color.white, Color.yellow);
 			debugLineBodyDirection = Utils.CreateDebugLine(Color.white, Color.red);
-            debugLineLights = new LineRenderer[config.albedoLightsQuantity];
+            debugLineLights = new LineRenderer[Config.maxAlbedoLightsQuantity];
 			for (var i = 0; i < config.albedoLightsQuantity; i++) {
                 debugLineLights[i] = Utils.CreateDebugLine(Color.white, Color.blue);
             }
@@ -93,8 +95,8 @@ namespace PlanetShine
 			}
 		}
 
-		private void UpdateAlbedoLights()
-		{
+		private void UpdateCelestialBody()
+        {            
 			body = FlightGlobals.ActiveVessel.mainBody;
 			bodyColor = new Color(100f/256f,100f/256f,100f/256f);
 			bodyGroundAmbient = 0.3f;
@@ -105,7 +107,48 @@ namespace PlanetShine
 				bodyIntensity = config.celestialBodyInfos[body].albedoIntensity;
 				bodyGroundAmbient = config.celestialBodyInfos[body].atmosphereAmbientLevel;
 			}
+        }
 
+        private void UpdateDebugLines()
+        {
+			if (config.debug) {
+				debugLineLightDirection.SetPosition( 0, visibleLightPositionAverage );
+				debugLineLightDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
+
+				debugLineSunDirection.SetPosition( 0, FlightGlobals.Bodies[0].position );
+				debugLineSunDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
+
+				debugLineBodyDirection.SetPosition( 0, body.position );
+				debugLineBodyDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
+
+			}
+
+			debugLineLightDirection.enabled = config.debug;
+			debugLineBodyDirection.enabled = config.debug;
+			debugLineSunDirection.enabled = config.debug;
+            foreach (LineRenderer line in debugLineLights)
+                line.enabled = false;
+
+            int i = 0;
+            foreach (GameObject albedoLight in albedoLights) {
+                if (config.albedoLightsQuantity > 1) {
+                    debugLineLights[i].enabled = config.debug;
+                    debugLineLights[i].SetPosition( 0, FlightGlobals.ActiveVessel.transform.position
+                                                    - albedoLight.light.transform.forward * 10000 );
+                    debugLineLights[i].SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );                           
+                } else {
+                    debugLineLights[1].enabled = config.debug;
+                    debugLineLights[1].SetPosition( 0, FlightGlobals.ActiveVessel.transform.position
+                                                    - albedoLight.light.transform.forward * 10000 );
+                    debugLineLights[1].SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );         
+                }
+                i++;
+            }
+
+        }
+
+		private void UpdateAlbedoLights()
+		{
 			bodyRadius = (float) body.Radius * 0.999f;
 			bodyVesselDirection = (FlightGlobals.ActiveVessel.transform.position - body.position).normalized;
 			bodySunDirection = (body.name == "Sun") ?
@@ -142,23 +185,6 @@ namespace PlanetShine
 			lightDistanceEffect = 1.0f / (1.0f + 25.0f * vesselLightRangeRatio * vesselLightRangeRatio);
 			visibleLightVesselDirection = (FlightGlobals.ActiveVessel.transform.position - visibleLightPositionAverage).normalized;
 
-			if (config.debug) {
-				debugLineLightDirection.SetPosition( 0, visibleLightPositionAverage );
-				debugLineLightDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
-
-				debugLineSunDirection.SetPosition( 0, FlightGlobals.Bodies[0].position );
-				debugLineSunDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
-
-				debugLineBodyDirection.SetPosition( 0, body.position );
-				debugLineBodyDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
-
-			}
-
-			debugLineLightDirection.enabled = config.debug;
-			debugLineBodyDirection.enabled = config.debug;
-			debugLineSunDirection.enabled = config.debug;
-            foreach (LineRenderer line in debugLineLights)
-                line.enabled = false;
 
 			lightIntensity = config.baseAlbedoIntensity / config.albedoLightsQuantity;
 			lightIntensity *= visibleLightRatio * boostedVisibleLightAngleEffect * atmosphereReflectionEffect
@@ -179,23 +205,17 @@ namespace PlanetShine
 					albedoLight.light.transform.forward = Quaternion.AngleAxis (i * (360f / config.albedoLightsQuantity),
                                                                                 visibleLightVesselDirection)
                         * albedoLight.light.transform.forward;
-                    debugLineLights[i].enabled = config.debug;
-                    debugLineLights[i].SetPosition( 0, FlightGlobals.ActiveVessel.transform.position
-                                                    - albedoLight.light.transform.forward * 10000 );
-                    debugLineLights[i].SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );                    
-				} else {
-                    debugLineLights[1].enabled = config.debug;
-                    debugLineLights[1].SetPosition( 0, FlightGlobals.ActiveVessel.transform.position
-                                                    - albedoLight.light.transform.forward * 10000 );
-                    debugLineLights[1].SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
-                }
+				}
                       
 				albedoLight.light.color = bodyColor;
 				albedoLight.light.enabled = renderEnabled && (i < config.albedoLightsQuantity);
 				i++;
 			}
+		}
 
-			if (ambientLight != null) {
+        private void UpdateAmbientLights()
+        {
+            if (ambientLight != null) {
 				vacuumColor.r = vacuumColor.g = vacuumColor.b = config.vacuumLightLevel;
 				ambientLight.vacuumAmbientColor = vacuumColor;
 				if (renderEnabled) {
@@ -204,8 +224,7 @@ namespace PlanetShine
                         + (RenderSettings.ambientLight * (1f - config.groundAmbientOverrideRatio));
                 }
 			}
-		}
-
+        }
 
 
 		public void Start()
@@ -216,31 +235,40 @@ namespace PlanetShine
 
 			ambientLight = FindObjectOfType(typeof(DynamicAmbientLight)) as DynamicAmbientLight;
 
+			vacuumColor = new Color (config.vacuumLightLevel, config.vacuumLightLevel, config.vacuumLightLevel);
 			if (ambientLight != null) {
-				ambientLight.vacuumAmbientColor = new Color(config.vacuumLightLevel,config.vacuumLightLevel,config.vacuumLightLevel);
+				ambientLight.vacuumAmbientColor = vacuumColor;
 			}
 
 			CreateAlbedoLights ();
 			CreateDebugLines ();
-			vacuumColor = new Color (config.vacuumLightLevel, config.vacuumLightLevel, config.vacuumLightLevel);
 		}
 
-		public void LateUpdate()
-		{
+        public void FixedUpdate()
+        {
+            if ((fixedUpdateCounter++ % config.updateFrequency) != 0)
+                return;
 			if (FlightGlobals.ActiveVessel == null)
 				return;
-
+            
 			if (config.debug) {
 				performanceTimer.Reset();
 				performanceTimer.Start();
 			}
-            
+
+            UpdateCelestialBody();
 			UpdateAlbedoLights();
+            UpdateDebugLines();
 
 			if (config.debug) {
 				performanceTimer.Stop();
 				performanceTimerLast = performanceTimer.Elapsed.TotalMilliseconds;
 			}
+        }
+        
+		public void LateUpdate()
+		{
+			UpdateAmbientLights();
 		}
 	}
 }

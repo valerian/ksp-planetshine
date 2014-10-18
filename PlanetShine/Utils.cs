@@ -8,7 +8,10 @@
 * file for more information.
 */
 
+using System.Collections.Generic;
+using System.Collections;
 using System;
+using System.IO;
 using UnityEngine;
 
 namespace PlanetShine
@@ -26,5 +29,17 @@ namespace PlanetShine
 			return line;
 		}
 	}
+
+    public class DisplaySettingOption<T>
+    {
+        public string label { get; private set; }
+        public T value { get; private set; }
+
+        public DisplaySettingOption(string label, T value)
+        {
+            this.label = label;
+            this.value = value;
+        }
+    }
 }
 

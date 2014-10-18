@@ -73,9 +73,11 @@ namespace PlanetShine
 
 		private void OnDraw(){
 			if (buttonState) {
-				configWindowPosition = GUILayout.Window (143751300, configWindowPosition, OnConfigWindow, "PlanetShine 0.2.0 - Early Beta", windowStyle);
+				configWindowPosition = GUILayout.Window (143751300, configWindowPosition,
+                                                         OnConfigWindow, "PlanetShine 0.2.0 - Early Beta", windowStyle);
 				if (config.debug && PlanetShine.Instance != null) {
-					debugWindowPosition = GUILayout.Window (143751301, debugWindowPosition, OnDebugWindow, "--- PLANETSHINE DEBUG ---", windowStyle);
+					debugWindowPosition = GUILayout.Window (143751301, debugWindowPosition,
+                                                            OnDebugWindow, "--- PLANETSHINE DEBUG ---", windowStyle);
 				}
                 if ((updateCounter % 100) == 0) {
                     ConfigManager.Instance.SaveSettings();
@@ -131,7 +133,7 @@ namespace PlanetShine
 			configWindowPosition.x = Mathf.Clamp (configWindowPosition.x, 0f, Screen.width - configWindowPosition.width);
 			configWindowPosition.y = Mathf.Clamp (configWindowPosition.y, 0f, Screen.height - configWindowPosition.height);
 		}
-
+        
         private void DisplayTab()
         {
             GUILayout.BeginHorizontal();
@@ -150,45 +152,27 @@ namespace PlanetShine
 
             GUILayout.Space(15);
 
-            GUILayout.BeginHorizontal();
-            
-            GUILayout.Label("Lights quantity", GUILayout.Width(settingsLabelWidth));
-            GUI.backgroundColor = config.albedoLightsQuantity == 1 ? tabSelectedColor : tabUnselectedColor;
-            GUI.contentColor = config.albedoLightsQuantity == 1 ? Color.white : new Color(0.6f, 0.6f, 0.6f);            
-            if (GUILayout.Button("Single") && config.albedoLightsQuantity != 1) {
-                config.setQuality(3);
-                config.albedoLightsQuantity = 1;
-            }
-            GUI.backgroundColor = config.albedoLightsQuantity != 1 ? tabSelectedColor : tabUnselectedColor;
-            GUI.contentColor = config.albedoLightsQuantity != 1 ? Color.white : new Color(0.6f, 0.6f, 0.6f);            
-            if (GUILayout.Button("Multiple (area)") && config.albedoLightsQuantity == 1) {
-                config.setQuality(3);
-                config.albedoLightsQuantity = Config.maxAlbedoLightsQuantity;
-            }
-            GUI.backgroundColor = originalBackgroundColor;
-            GUI.contentColor = originalTextColor;
-            
-            GUILayout.EndHorizontal();
+            QualityChoiceRow("Lights quantity", ref config.albedoLightsQuantity,
+                             new DisplaySettingOption<int>[]
+                    {
+                        new DisplaySettingOption<int>("Single", 1),
+                        new DisplaySettingOption<int>("Multiple (area)", Config.maxAlbedoLightsQuantity)
+                    });
 
-            GUILayout.BeginHorizontal();
-            
-            GUILayout.Label("Lights rendering", GUILayout.Width(settingsLabelWidth));
-            GUI.backgroundColor = config.useVertex ? tabSelectedColor : tabUnselectedColor;
-            GUI.contentColor = config.useVertex ? Color.white : new Color(0.6f, 0.6f, 0.6f);            
-            if (GUILayout.Button("Vertex mode") && !config.useVertex) {
-                config.setQuality(3);
-                config.useVertex = true;
-            }
-            GUI.backgroundColor = !config.useVertex ? tabSelectedColor : tabUnselectedColor;
-            GUI.contentColor = !config.useVertex ? Color.white : new Color(0.6f, 0.6f, 0.6f);            
-            if (GUILayout.Button("Pixel mode") && config.useVertex) {
-                config.setQuality(3);
-                config.useVertex = false;
-            }
-            GUI.backgroundColor = originalBackgroundColor;
-            GUI.contentColor = originalTextColor;
+            QualityChoiceRow("Lights rendering", ref config.useVertex,
+                             new DisplaySettingOption<bool>[]
+                    {
+                        new DisplaySettingOption<bool>("Vertex mode", true),
+                        new DisplaySettingOption<bool>("Pixel mode", false)
+                    });
 
-            GUILayout.EndHorizontal();
+            QualityChoiceRow("Update frequency", ref config.updateFrequency,
+                             new DisplaySettingOption<int>[]
+                    {
+                        new DisplaySettingOption<int>("10 per second", 5),
+                        new DisplaySettingOption<int>("25 per second", 2),
+                        new DisplaySettingOption<int>("50 per second", 1),
+                    });
 
         }
 
@@ -314,7 +298,27 @@ namespace PlanetShine
 			debugWindowPosition.y = Mathf.Clamp (debugWindowPosition.y, 0f, Screen.height - debugWindowPosition.height);
 		}
 
-		private void VariableDebugLabel<T>(string name, T data)
+        private void QualityChoiceRow<T>(string label, ref T target, DisplaySettingOption<T>[] choices)
+        {
+            GUILayout.BeginHorizontal();            
+            GUILayout.Label(label, GUILayout.Width(settingsLabelWidth));
+            foreach (DisplaySettingOption<T> choice in choices) {
+                GUI.backgroundColor = EqualityComparer<T>.Default.Equals(target, choice.value)
+                    ? tabSelectedColor : tabUnselectedColor;
+                GUI.contentColor = EqualityComparer<T>.Default.Equals(target, choice.value)
+                    ? Color.white : new Color(0.6f, 0.6f, 0.6f);            
+                if (GUILayout.Button(choice.label)
+                    && !EqualityComparer<T>.Default.Equals(target, choice.value)) {
+                    config.setQuality(3);
+                    target = choice.value;
+                }
+            }
+            GUI.backgroundColor = originalBackgroundColor;
+            GUI.contentColor = originalTextColor;            
+            GUILayout.EndHorizontal();
+        }
+
+        private void VariableDebugLabel<T>(string name, T data)
 		{
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label (name, GUILayout.Width(debugWindowLabelWidth));
@@ -322,7 +326,7 @@ namespace PlanetShine
 			GUILayout.EndHorizontal ();
 		}
 
-
+        
 		internal void OnDestroy() {
 			button.Destroy ();
 		}

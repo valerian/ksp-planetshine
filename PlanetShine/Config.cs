@@ -47,6 +47,7 @@ namespace PlanetShine
 		public float maxAmbientFadeAltitude = 0.06f;
 		public float albedoRange = 8f;
 		public bool debug = false;
+        public int updateFrequency = 1;
 		public Dictionary<CelestialBody, CelestialBodyInfo> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodyInfo>();
 
         public void setQuality(int selectedQuality)
@@ -56,14 +57,17 @@ namespace PlanetShine
             case 0:
                 albedoLightsQuantity = 1;
                 useVertex = true;
+                updateFrequency = 5;
                 break;
             case 1:
                 albedoLightsQuantity = maxAlbedoLightsQuantity;
                 useVertex = true;
+                updateFrequency = 2;
                 break;
             case 2:
                 albedoLightsQuantity = maxAlbedoLightsQuantity;
                 useVertex = false;
+                updateFrequency = 1;
                 break;
             default:
                 break;
@@ -109,6 +113,7 @@ namespace PlanetShine
 			config.maxAmbientFadeAltitude = float.Parse(configFileNode.GetValue("maxAmbientFadeAltitude"));
 			config.albedoRange = float.Parse(configFileNode.GetValue("albedoRange"));
 			config.useVertex = bool.Parse(configFileNode.GetValue("useVertex"));
+			config.updateFrequency = int.Parse(configFileNode.GetValue("updateFrequency"));
 			config.setQuality(int.Parse(configFileNode.GetValue("quality")));
 
 			foreach (ConfigNode bodySettings in celestialBodies.GetNodes("CelestialBodyColor"))
@@ -141,6 +146,7 @@ namespace PlanetShine
             configFileNode.SetValue("maxAmbientFadeAltitude", config.maxAmbientFadeAltitude.ToString());
             configFileNode.SetValue("albedoRange", config.albedoRange.ToString());
             configFileNode.SetValue("useVertex", config.useVertex ? "True" : "False");
+            configFileNode.SetValue("updatefrequency", config.updateFrequency.ToString());
             configFileNode.SetValue("quality", config.quality.ToString());
             configFile.Save(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
         }
