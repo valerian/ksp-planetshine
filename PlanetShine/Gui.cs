@@ -41,7 +41,6 @@ namespace PlanetShine
 		private int settingsLabelWidth = 100;
         private int updateCounter = 0;
 
-
 		internal Gui() {
 			foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
 			{
@@ -179,29 +178,44 @@ namespace PlanetShine
         private void IntensityTab()
         {
 			GUILayout.Label ("Planetshine light intensity: " + config.baseAlbedoIntensity);
+            GUILayout.BeginHorizontal();
 			config.baseAlbedoIntensity = (float) Math.Round(GUILayout.HorizontalSlider(config.baseAlbedoIntensity, 0.0f, 0.50f), 2);
+            ResetButton(ref config.baseAlbedoIntensity, ConfigDefaults.baseAlbedoIntensity);
+            GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
 
             GUILayout.Label ("Vacuum ambient light level: " + config.vacuumLightLevel);
+            GUILayout.BeginHorizontal();
 			config.vacuumLightLevel = 5 * (float) Math.Round(GUILayout.HorizontalSlider(config.vacuumLightLevel/5f, 0.0f, 0.02f), 3);
+            ResetButton(ref config.vacuumLightLevel, ConfigDefaults.vacuumLightLevel);
+            GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
 
 			GUILayout.Label ("Ground and atmosphere ambient light intensity: " + config.baseGroundAmbient);
+            GUILayout.BeginHorizontal();
 			config.baseGroundAmbient = (float) Math.Round(GUILayout.HorizontalSlider(config.baseGroundAmbient, 0.0f, 2.00f), 1);
+            ResetButton(ref config.baseGroundAmbient, ConfigDefaults.baseGroundAmbient);
+            GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
 
             GUILayout.Label ("Ground ambient light override: " + config.groundAmbientOverrideRatio * 100 + "%");
+            GUILayout.BeginHorizontal();
 			config.groundAmbientOverrideRatio = (float) Math.Round(GUILayout.HorizontalSlider(config.groundAmbientOverrideRatio, 0.0f, 1.0f), 1);
+            ResetButton(ref config.groundAmbientOverrideRatio, ConfigDefaults.groundAmbientOverrideRatio);
+            GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
 
             GUILayout.Label ("Planetshine maximum range: " + config.albedoRange);
             GUILayout.Label ("(approximately " + Math.Round(config.albedoRange * planetShine.bodyRadius / 2000f) +
                              "km from " + planetShine.body.name + ")");
+            GUILayout.BeginHorizontal();
 			config.albedoRange = (float) Math.Round(GUILayout.HorizontalSlider(config.albedoRange, 0.0f, 20f), 1);
+            ResetButton(ref config.albedoRange, ConfigDefaults.albedoRange);
+            GUILayout.EndHorizontal();
         }
 
         private void AdvancedTab()
@@ -211,47 +225,51 @@ namespace PlanetShine
             GUILayout.Space(15);
 
 
-            GUI.contentColor = new Color(0.8f,0.8f,1.0f);
+            GUI.contentColor = new Color(0.8f,1.0f,0.8f);
             GUILayout.Label ("Planetshine fade altitude: " + config.minAlbedoFadeAltitude + " to " +config.maxAlbedoFadeAltitude);
             GUILayout.Label ("(from " + Math.Round(config.minAlbedoFadeAltitude * planetShine.bodyRadius / 1000f) +
                              "km to " + Math.Round(config.maxAlbedoFadeAltitude * planetShine.bodyRadius / 1000f) + 
                              "km on " + planetShine.body.name + ")");
             GUI.contentColor = originalTextColor;
             GUILayout.BeginHorizontal();
-            GUILayout.Label ("Min");
+            GUILayout.Label ("Min", GUILayout.Width(50));
 			config.minAlbedoFadeAltitude = (float) Math.Round(GUILayout.HorizontalSlider(config.minAlbedoFadeAltitude, 0.0f,
                                                                                          config.maxAlbedoFadeAltitude), 2);
+            ResetButton(ref config.minAlbedoFadeAltitude, ConfigDefaults.minAlbedoFadeAltitude);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label ("Max");
+            GUILayout.Label ("Max", GUILayout.Width(50));
 			config.maxAlbedoFadeAltitude = (float) Math.Round(GUILayout.HorizontalSlider(config.maxAlbedoFadeAltitude,
                                                                                          config.minAlbedoFadeAltitude, 0.10f), 2);
+            ResetButton(ref config.maxAlbedoFadeAltitude, ConfigDefaults.maxAlbedoFadeAltitude);
             GUILayout.EndHorizontal();
 
             GUILayout.Space(15);
 
-            GUI.contentColor = new Color(0.8f,0.8f,1.0f);
+            GUI.contentColor = new Color(0.8f,1.0f,0.8f);
             GUILayout.Label ("Ground ambient fade altitude: " + config.minAmbientFadeAltitude + " to " +config.maxAmbientFadeAltitude);
             GUILayout.Label ("(from " + Math.Round(config.minAmbientFadeAltitude * planetShine.bodyRadius / 1000f) +
                              "km to " + Math.Round(config.maxAmbientFadeAltitude * planetShine.bodyRadius / 1000f) + 
                              "km on " + planetShine.body.name + ")");
             GUI.contentColor = originalTextColor;
             GUILayout.BeginHorizontal();
-            GUILayout.Label ("Min");
+            GUILayout.Label ("Min", GUILayout.Width(50));
 			config.minAmbientFadeAltitude = (float) Math.Round(GUILayout.HorizontalSlider(config.minAmbientFadeAltitude, 0.0f,
                                                                                          config.maxAmbientFadeAltitude), 2);
+            ResetButton(ref config.minAmbientFadeAltitude, ConfigDefaults.minAmbientFadeAltitude);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label ("Max");
+            GUILayout.Label ("Max", GUILayout.Width(50));
 			config.maxAmbientFadeAltitude = (float) Math.Round(GUILayout.HorizontalSlider(config.maxAmbientFadeAltitude,
                                                                                          config.minAmbientFadeAltitude, 0.10f), 2);
+            ResetButton(ref config.maxAmbientFadeAltitude, ConfigDefaults.maxAmbientFadeAltitude);
             GUILayout.EndHorizontal();
             
             
             GUILayout.Space(30);
 
             GUI.contentColor = new Color(1.0f,0.7f,0.6f);
-			config.debug = GUILayout.Toggle(config.debug, "Debug mode");            
+			config.debug = GUILayout.Toggle(config.debug, "Debug mode");
             GUI.contentColor = originalTextColor;
         }
         
@@ -277,6 +295,7 @@ namespace PlanetShine
 			VariableDebugLabel ("visibleLightAngleEffect", planetShine.visibleLightAngleEffect);
 			VariableDebugLabel ("boostedVisibleLightAngleEffect", planetShine.boostedVisibleLightAngleEffect);
 			VariableDebugLabel ("visibleLightPositionAverage", planetShine.visibleLightPositionAverage);
+			VariableDebugLabel ("atmosphereReflectionRatio", planetShine.atmosphereReflectionRatio);
 			VariableDebugLabel ("atmosphereReflectionEffect", planetShine.atmosphereReflectionEffect);
 			VariableDebugLabel ("atmosphereAmbientRatio", planetShine.atmosphereAmbientRatio);
 			VariableDebugLabel ("atmosphereAmbientEffect", planetShine.atmosphereAmbientEffect);
@@ -326,6 +345,11 @@ namespace PlanetShine
 			GUILayout.EndHorizontal ();
 		}
 
+        private void ResetButton<T>(ref T target, T original)
+        {
+            if(GUILayout.Button("Reset", GUILayout.Width(50)))
+                target = original;
+        }
         
 		internal void OnDestroy() {
 			button.Destroy ();

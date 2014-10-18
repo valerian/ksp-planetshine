@@ -56,6 +56,7 @@ namespace PlanetShine
 		public float visibleLightAngleEffect;
 		public float boostedVisibleLightAngleEffect;
 		public Vector3 visibleLightPositionAverage;
+		public float atmosphereReflectionRatio;
 		public float atmosphereReflectionEffect;
 		public float atmosphereAmbientRatio;
 		public float atmosphereAmbientEffect;
@@ -167,10 +168,10 @@ namespace PlanetShine
 			boostedVisibleLightAngleEffect = Mathf.Clamp01(visibleLightAngleEffect + 0.3f);
 			visibleLightPositionAverage = body.position + Vector3.RotateTowards(bodyVesselDirection, bodySunDirection,
                                                                                 visibleLightAngleAverage * 0.01745f, 0.0f) * bodyRadius;
-			atmosphereReflectionEffect = Mathf.Clamp01((1f - bodyGroundAmbient) +
-                                                       ((vesselAltitude - (bodyRadius * config.minAlbedoFadeAltitude))
-                                                        / (bodyRadius * (config.maxAlbedoFadeAltitude
-                                                                         - config.minAlbedoFadeAltitude))));
+            atmosphereReflectionRatio = Mathf.Clamp01((vesselAltitude - (bodyRadius * config.minAlbedoFadeAltitude))
+                                                      / (bodyRadius * (config.maxAlbedoFadeAltitude
+                                                                       - config.minAlbedoFadeAltitude)));
+			atmosphereReflectionEffect = Mathf.Clamp01((1f - bodyGroundAmbient) + atmosphereReflectionRatio);
 			atmosphereAmbientRatio = 1f - Mathf.Clamp01((vesselAltitude - (bodyRadius * config.minAmbientFadeAltitude))
                                                         / (bodyRadius * (config.maxAmbientFadeAltitude
                                                                          - config.minAmbientFadeAltitude)));
