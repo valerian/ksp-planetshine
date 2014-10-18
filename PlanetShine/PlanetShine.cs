@@ -195,7 +195,10 @@ namespace PlanetShine
             
 			int i = 0;
 			foreach (GameObject albedoLight in albedoLights){
-                albedoLight.light.renderMode = config.useVertex ? LightRenderMode.ForceVertex : LightRenderMode.ForcePixel;
+                if (config.useVertex && body.name != "Sun")
+                    albedoLight.light.renderMode = LightRenderMode.ForceVertex;
+                else
+                    albedoLight.light.renderMode = LightRenderMode.ForcePixel;
 				albedoLight.light.intensity = lightIntensity;
 				albedoLight.light.transform.forward = visibleLightVesselDirection;
 				if (config.albedoLightsQuantity > 1 ) { // Spread the lights, but only if there are more than one
