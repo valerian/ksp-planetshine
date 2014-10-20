@@ -13,18 +13,20 @@ using UnityEngine;
 
 namespace PlanetShine
 {
-	public class CelestialBodyInfo
-	{
-		public Color albedoColor;
-		public float albedoIntensity;
-		public float atmosphereAmbientLevel;
+    public class CelestialBodyInfo
+    {
+        public Color albedoColor;
+        public float albedoIntensity;
+        public float atmosphereAmbientLevel;
+        public float groundAmbientOverride;
 
-		public CelestialBodyInfo (Color albedoColor, float albedoIntensity, float atmosphereAmbientLevel)
-		{
-			this.albedoColor = albedoColor;
-			this.albedoIntensity = albedoIntensity;
-			this.atmosphereAmbientLevel = atmosphereAmbientLevel;
-		}
-	}
+        public CelestialBodyInfo (Color albedoColor, float albedoIntensity, float atmosphereAmbientLevel, float groundAmbientOverride)
+        {
+            this.albedoColor = albedoColor;
+            this.albedoIntensity = albedoIntensity;
+            this.atmosphereAmbientLevel = atmosphereAmbientLevel;
+            this.groundAmbientOverride = groundAmbientOverride;
+        }
+    }
 }
 

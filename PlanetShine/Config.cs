@@ -17,38 +17,38 @@ using UnityEngine;
 namespace PlanetShine
 {
 
-	public sealed class Config
-	{
-		private static readonly Config instance = new Config();
+    public sealed class Config
+    {
+        private static readonly Config instance = new Config();
 
-		private Config(){}
+        private Config(){}
 
-		public static Config Instance
-		{
-			get 
-			{
-				return instance; 
-			}
-		}
+        public static Config Instance
+        {
+            get 
+            {
+                return instance; 
+            }
+        }
 
         public static string[] qualityLabels = {"Low", "Medium", "High"};
-		public static int maxAlbedoLightsQuantity = 4;
+        public static int maxAlbedoLightsQuantity = 4;
 
         public int quality { get; private set; }
-		public bool useVertex = false;
-		public int albedoLightsQuantity = 4;
-		public float baseAlbedoIntensity = 0.2f;
-		public float vacuumLightLevel = 0.02f;
-		public float baseGroundAmbient = 0.50f;
-		public float groundAmbientOverrideRatio = 0.5f;
-		public float minAlbedoFadeAltitude = 0.02f;
-		public float maxAlbedoFadeAltitude = 0.10f;
-		public float minAmbientFadeAltitude = 0.00f;
-		public float maxAmbientFadeAltitude = 0.08f;
-		public float albedoRange = 8f;
-		public bool debug = false;
+        public bool useVertex = false;
+        public int albedoLightsQuantity = 4;
+        public float baseAlbedoIntensity = 0.2f;
+        public float vacuumLightLevel = 0.02f;
+        public float baseGroundAmbient = 0.50f;
+        public float groundAmbientOverrideRatio = 0.5f;
+        public float minAlbedoFadeAltitude = 0.02f;
+        public float maxAlbedoFadeAltitude = 0.10f;
+        public float minAmbientFadeAltitude = 0.00f;
+        public float maxAmbientFadeAltitude = 0.08f;
+        public float albedoRange = 8f;
+        public bool debug = false;
         public int updateFrequency = 1;
-		public Dictionary<CelestialBody, CelestialBodyInfo> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodyInfo>();
+        public Dictionary<CelestialBody, CelestialBodyInfo> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodyInfo>();
 
         public void setQuality(int selectedQuality)
         {
@@ -73,86 +73,92 @@ namespace PlanetShine
                 break;
             }
         }
-	}
+    }
 
 
     public class ConfigDefaults
     {
-		private ConfigDefaults(){}
+        private ConfigDefaults(){}
 
-		public static float baseAlbedoIntensity = 0.2f;
-		public static float vacuumLightLevel = 0.02f;
-		public static float baseGroundAmbient = 0.50f;
-		public static float groundAmbientOverrideRatio = 0.5f;
-		public static float minAlbedoFadeAltitude = 0.02f;
-		public static float maxAlbedoFadeAltitude = 0.10f;
-		public static float minAmbientFadeAltitude = 0.00f;
-		public static float maxAmbientFadeAltitude = 0.08f;
-		public static float albedoRange = 8f;
+        public static float baseAlbedoIntensity = 0.2f;
+        public static float vacuumLightLevel = 0.02f;
+        public static float baseGroundAmbient = 0.50f;
+        public static float groundAmbientOverrideRatio = 0.5f;
+        public static float minAlbedoFadeAltitude = 0.02f;
+        public static float maxAlbedoFadeAltitude = 0.10f;
+        public static float minAmbientFadeAltitude = 0.00f;
+        public static float maxAmbientFadeAltitude = 0.08f;
+        public static float albedoRange = 8f;
     }
 
     
-	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-	public class ConfigManager : MonoBehaviour
-	{
-		public static ConfigManager Instance { get; private set; }
-		private Config config = Config.Instance;
+    [KSPAddon(KSPAddon.Startup.EveryScene, false)]
+    public class ConfigManager : MonoBehaviour
+    {
+        public static ConfigManager Instance { get; private set; }
+        private Config config = Config.Instance;
         private ConfigNode configFile;
         private ConfigNode configFileNode;
 
-		public void Start()
-		{
-			if (Instance != null)
-				Destroy (Instance.gameObject);
-			Instance = this;
+        public void Start()
+        {
+            if (Instance != null)
+                Destroy (Instance.gameObject);
+            Instance = this;
 
-			LoadSettings ();
-		}
-			
-		public void LoadSettings()
-		{
+            LoadSettings ();
+        }
+            
+        public void LoadSettings()
+        {
             configFile = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
             configFileNode = configFile.GetNode("PlanetShine");
-			var celestialBodies = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/CelestialBodies.cfg");
+            var celestialBodies = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/CelestialBodies.cfg");
 
-			if (bool.Parse (configFileNode.GetValue ("useAreaLight")))
-				config.albedoLightsQuantity = Config.maxAlbedoLightsQuantity;
-			else
-				config.albedoLightsQuantity = 1;
+            if (bool.Parse (configFileNode.GetValue ("useAreaLight")))
+                config.albedoLightsQuantity = Config.maxAlbedoLightsQuantity;
+            else
+                config.albedoLightsQuantity = 1;
 
-			config.baseAlbedoIntensity = float.Parse(configFileNode.GetValue("baseAlbedoIntensity"));
-			config.vacuumLightLevel = float.Parse(configFileNode.GetValue("vacuumLightLevel"));
-			config.baseGroundAmbient = float.Parse(configFileNode.GetValue("baseGroundAmbient"));
-			config.groundAmbientOverrideRatio = float.Parse(configFileNode.GetValue("groundAmbientOverrideRatio"));
-			config.minAlbedoFadeAltitude = float.Parse(configFileNode.GetValue("minAlbedoFadeAltitude"));
-			config.maxAlbedoFadeAltitude = float.Parse(configFileNode.GetValue("maxAlbedoFadeAltitude"));
-			config.minAmbientFadeAltitude = float.Parse(configFileNode.GetValue("minAmbientFadeAltitude"));
-			config.maxAmbientFadeAltitude = float.Parse(configFileNode.GetValue("maxAmbientFadeAltitude"));
-			config.albedoRange = float.Parse(configFileNode.GetValue("albedoRange"));
-			config.useVertex = bool.Parse(configFileNode.GetValue("useVertex"));
-			config.updateFrequency = int.Parse(configFileNode.GetValue("updateFrequency"));
-			config.setQuality(int.Parse(configFileNode.GetValue("quality")));
+            config.baseAlbedoIntensity = float.Parse(configFileNode.GetValue("baseAlbedoIntensity"));
+            config.vacuumLightLevel = float.Parse(configFileNode.GetValue("vacuumLightLevel"));
+            config.baseGroundAmbient = float.Parse(configFileNode.GetValue("baseGroundAmbient"));
+            config.groundAmbientOverrideRatio = float.Parse(configFileNode.GetValue("groundAmbientOverrideRatio"));
+            config.minAlbedoFadeAltitude = float.Parse(configFileNode.GetValue("minAlbedoFadeAltitude"));
+            config.maxAlbedoFadeAltitude = float.Parse(configFileNode.GetValue("maxAlbedoFadeAltitude"));
+            config.minAmbientFadeAltitude = float.Parse(configFileNode.GetValue("minAmbientFadeAltitude"));
+            config.maxAmbientFadeAltitude = float.Parse(configFileNode.GetValue("maxAmbientFadeAltitude"));
+            config.albedoRange = float.Parse(configFileNode.GetValue("albedoRange"));
+            config.useVertex = bool.Parse(configFileNode.GetValue("useVertex"));
+            config.updateFrequency = int.Parse(configFileNode.GetValue("updateFrequency"));
+            config.setQuality(int.Parse(configFileNode.GetValue("quality")));
 
-			foreach (ConfigNode bodySettings in celestialBodies.GetNodes("CelestialBodyColor"))
-			{
-				CelestialBody body = FlightGlobals.Bodies.Find(n => n.name == bodySettings.GetValue("name"));
-				if (FlightGlobals.Bodies.Contains(body))
-				{
-					Color color = ConfigNode.ParseColor(bodySettings.GetValue("color"))
+            foreach (ConfigNode bodySettings in celestialBodies.GetNodes("CelestialBodyColor"))
+            {
+                CelestialBody body = FlightGlobals.Bodies.Find(n => n.name == bodySettings.GetValue("name"));
+                if (FlightGlobals.Bodies.Contains(body))
+                {
+                    Color color = ConfigNode.ParseColor(bodySettings.GetValue("color"))
                         * float.Parse(bodySettings.GetValue("intensity"));
-					color.r = (color.r / 255f);
-					color.g = (color.g / 255f);
-					color.b = (color.b / 255f);
-					color.a = 1;
-					if (!config.celestialBodyInfos.ContainsKey(body))
-						config.celestialBodyInfos.Add(body, new CelestialBodyInfo(color, float.Parse(bodySettings.GetValue("intensity")), float.Parse(bodySettings.GetValue("groundAmbient"))));
-				}
-			}
-		}
+                    color.r = (color.r / 255f);
+                    color.g = (color.g / 255f);
+                    color.b = (color.b / 255f);
+                    color.a = 1;
+                    if (!config.celestialBodyInfos.ContainsKey(body))
+                        config.celestialBodyInfos.Add(body, new CelestialBodyInfo
+                                                      (
+                                                       color,
+                                                       float.Parse(bodySettings.GetValue("intensity")),
+                                                       float.Parse(bodySettings.GetValue("atmosphereAmbient")),
+                                                       float.Parse(bodySettings.GetValue("groundAmbientOverride"))
+                                                       ));
+                }
+            }
+        }
 
         public void SaveSettings()
         {
-			configFileNode.SetValue("useAreaLight", (config.albedoLightsQuantity > 1) ? "True" : "False");
+            configFileNode.SetValue("useAreaLight", (config.albedoLightsQuantity > 1) ? "True" : "False");
             configFileNode.SetValue("baseAlbedoIntensity", config.baseAlbedoIntensity.ToString());
             configFileNode.SetValue("vacuumLightLevel", config.vacuumLightLevel.ToString());
             configFileNode.SetValue("baseGroundAmbient", config.baseGroundAmbient.ToString());
@@ -168,6 +174,6 @@ namespace PlanetShine
             configFile.Save(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
         }
 
-	}
+    }
 }
 
