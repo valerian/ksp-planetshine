@@ -113,7 +113,6 @@ namespace PlanetShine
         {
             configFile = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
             configFileNode = configFile.GetNode("PlanetShine");
-            var celestialBodies = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/CelestialBodies.cfg");
 
             if (bool.Parse (configFileNode.GetValue ("useAreaLight")))
                 config.albedoLightsQuantity = Config.maxAlbedoLightsQuantity;
@@ -133,7 +132,7 @@ namespace PlanetShine
             config.updateFrequency = int.Parse(configFileNode.GetValue("updateFrequency"));
             config.setQuality(int.Parse(configFileNode.GetValue("quality")));
 
-            foreach (ConfigNode bodySettings in celestialBodies.GetNodes("CelestialBodyColor"))
+            foreach (ConfigNode bodySettings in GameDatabase.Instance.GetConfigNodes("CelestialBodyColor"))
             {
                 CelestialBody body = FlightGlobals.Bodies.Find(n => n.name == bodySettings.GetValue("name"));
                 if (FlightGlobals.Bodies.Contains(body))
