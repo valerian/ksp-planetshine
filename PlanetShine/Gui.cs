@@ -427,7 +427,9 @@ namespace PlanetShine
         }
         
         internal void OnDestroy() {
-            blizzyButton.Destroy ();
+            blizzyButton.Destroy();
+            if (stockButton != null)
+                ApplicationLauncher.Instance.RemoveModApplication(stockButton);
         }
     }
 }
