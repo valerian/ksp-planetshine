@@ -29,13 +29,14 @@ namespace PlanetShine
         private static Rect debugWindowPosition = new Rect(Screen.width - 420,60,80,80);
         private static GUIStyle windowStyle = null;
         private static GUIStyle tabStyle = null;
-        private static bool buttonState = false;
+        private static bool isConfigDisplayed = false;
         private Color originalBackgroundColor;
         private Color originalTextColor;
         private Config config = Config.Instance;
         private PlanetShine planetShine;
-        private IButton button;
-        private bool toolbarInstalled = false;
+        private IButton blizzyButton;
+        private ApplicationLauncherButton stockButton;
+        private bool blizzyToolbarInstalled = false;
         private int debugWindowLabelWidth = 200;
         private int debugWindowDataWidth = 200;
         private int settingsLabelWidth = 100;
@@ -45,19 +46,77 @@ namespace PlanetShine
             foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
             {
                 if (assembly.name == "Toolbar")
-                    toolbarInstalled = true;
+                    blizzyToolbarInstalled = true;
             }
-            if (!toolbarInstalled)
+            UpdateToolbarBlizzy();
+            UpdateToolbarStock();
+        }
+
+        private void UpdateToolbarStock()
+        {
+            if (stockButton != null)
+            {
+                if (!config.stockToolbarEnabled && blizzyToolbarInstalled)
+                {
+                    ApplicationLauncher.Instance.RemoveModApplication(stockButton);
+                    stockButton = null;
+                }
                 return;
-            button = ToolbarManager.Instance.add("PlanetShine", "Gui");
-            button.TexturePath = "PlanetShine/Icons/ps_disabled";
-            button.Visibility = new GameScenesVisibility(GameScenes.FLIGHT);
-            button.ToolTip = "PlanetShine Settings";
-            button.OnClick += (e) => {
+            }
+            else if (!config.stockToolbarEnabled && blizzyToolbarInstalled)
+                return;
+            stockButton = ApplicationLauncher.Instance.AddModApplication(
+                () =>
+                {
+                    planetShine = PlanetShine.Instance;
+                    isConfigDisplayed = true;
+                    if (blizzyButton != null)
+                        UpdateButtonIconBlizzy();
+                },
+                () =>
+                {
+                    isConfigDisplayed = false;
+                    if (blizzyButton != null)
+                        UpdateButtonIconBlizzy();
+                },
+                null,
+                null,
+                null,
+                null,
+                ApplicationLauncher.AppScenes.FLIGHT,
+                GameDatabase.Instance.GetTexture("PlanetShine/Icons/ps_toolbar", false)
+                );
+            if (isConfigDisplayed)
+                stockButton.SetTrue();
+        }
+
+        private void UpdateToolbarBlizzy()
+        {
+            if (!blizzyToolbarInstalled)
+                return;
+            if (blizzyButton != null)
+                return;
+            blizzyButton = ToolbarManager.Instance.add("PlanetShine", "Gui");
+            blizzyButton.TexturePath = "PlanetShine/Icons/ps_disabled";
+            blizzyButton.Visibility = new GameScenesVisibility(GameScenes.FLIGHT);
+            blizzyButton.ToolTip = "PlanetShine Settings";
+            blizzyButton.OnClick += (e) =>
+            {
                 planetShine = PlanetShine.Instance;
-                button.TexturePath = buttonState ? "PlanetShine/Icons/ps_disabled" : "PlanetShine/Icons/ps_enabled";
-                buttonState = !buttonState;
+                isConfigDisplayed = !isConfigDisplayed;
+                if (stockButton != null)
+                    if (isConfigDisplayed)
+                        stockButton.SetTrue();
+                    else
+                        stockButton.SetFalse();
+                else
+                    UpdateButtonIconBlizzy();
             };
+        }
+
+        private void UpdateButtonIconBlizzy() {
+            if (blizzyToolbarInstalled)
+                blizzyButton.TexturePath = isConfigDisplayed ? "PlanetShine/Icons/ps_enabled" : "PlanetShine/Icons/ps_disabled";
         }
 
         public void Awake() { 
@@ -71,9 +130,9 @@ namespace PlanetShine
         }
 
         private void OnDraw(){
-            if (buttonState) {
+            if (isConfigDisplayed) {
                 configWindowPosition = GUILayout.Window (143751300, configWindowPosition,
-                                                         OnConfigWindow, "PlanetShine 0.2.2 - Early Beta", windowStyle);
+                                                         OnConfigWindow, "PlanetShine 0.2.3 - Early Beta", windowStyle);
                 if (config.debug && PlanetShine.Instance != null) {
                     debugWindowPosition = GUILayout.Window (143751301, debugWindowPosition,
                                                             OnDebugWindow, "--- PLANETSHINE DEBUG ---", windowStyle);
@@ -89,7 +148,16 @@ namespace PlanetShine
         {
             originalBackgroundColor = GUI.backgroundColor;
             originalTextColor = GUI.contentColor;
-            
+
+            if (GUI.Button(new Rect(configWindowPosition.width - 22, 3, 19, 19), "x"))
+            {
+                isConfigDisplayed = false;
+                if (stockButton != null)
+                    stockButton.SetFalse();
+                else if (blizzyButton != null)
+                    UpdateButtonIconBlizzy();
+            }
+
             GUILayout.Space(15);
 
             GUILayout.BeginVertical();
@@ -105,7 +173,7 @@ namespace PlanetShine
             }
             GUI.contentColor = originalTextColor;
             GUI.backgroundColor = originalBackgroundColor;
-            
+
             GUILayout.EndHorizontal();
 
             GUILayout.Space(30);
@@ -221,6 +289,13 @@ namespace PlanetShine
         private void AdvancedTab()
         {
             PlanetShine.renderEnabled = GUILayout.Toggle(PlanetShine.renderEnabled, "Planetshine global ON/OFF");
+            if (blizzyToolbarInstalled)
+            {
+                bool stockToolbarEnabledOldValue = config.stockToolbarEnabled;
+                config.stockToolbarEnabled = GUILayout.Toggle(config.stockToolbarEnabled, "Use stock toolbar");
+                if (config.stockToolbarEnabled != stockToolbarEnabledOldValue)
+                    UpdateToolbarStock();
+            }
 
             GUILayout.Space(15);
 
@@ -352,7 +427,7 @@ namespace PlanetShine
         }
         
         internal void OnDestroy() {
-            button.Destroy ();
+            blizzyButton.Destroy ();
         }
     }
 }

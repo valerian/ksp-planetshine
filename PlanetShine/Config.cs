@@ -50,6 +50,8 @@ namespace PlanetShine
         public int updateFrequency = 1;
         public Dictionary<CelestialBody, CelestialBodyInfo> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodyInfo>();
 
+        public bool stockToolbarEnabled = true;
+
         public void setQuality(int selectedQuality)
         {
             quality = selectedQuality;
@@ -80,8 +82,8 @@ namespace PlanetShine
     {
         private ConfigDefaults(){}
 
-        public static float baseAlbedoIntensity = 0.2f;
-        public static float vacuumLightLevel = 0.02f;
+        public static float baseAlbedoIntensity = 0.22f;
+        public static float vacuumLightLevel = 0.03f;
         public static float baseGroundAmbient = 0.50f;
         public static float groundAmbientOverrideRatio = 0.5f;
         public static float minAlbedoFadeAltitude = 0.02f;
@@ -132,6 +134,8 @@ namespace PlanetShine
             config.useVertex = bool.Parse(configFileNode.GetValue("useVertex"));
             config.updateFrequency = int.Parse(configFileNode.GetValue("updateFrequency"));
             config.setQuality(int.Parse(configFileNode.GetValue("quality")));
+            if (configFileNode.HasValue("stockToolbarEnabled"))
+                config.stockToolbarEnabled = bool.Parse(configFileNode.GetValue("stockToolbarEnabled"));
 
             foreach (ConfigNode bodySettings in celestialBodies.GetNodes("CelestialBodyColor"))
             {
@@ -171,6 +175,7 @@ namespace PlanetShine
             configFileNode.SetValue("useVertex", config.useVertex ? "True" : "False");
             configFileNode.SetValue("updatefrequency", config.updateFrequency.ToString());
             configFileNode.SetValue("quality", config.quality.ToString());
+            configFileNode.SetValue("stockToolbarEnabled", config.stockToolbarEnabled ? "True" : "False");
             configFile.Save(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
         }
 
