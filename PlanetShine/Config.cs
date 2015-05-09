@@ -94,7 +94,7 @@ namespace PlanetShine
     }
 
     
-    [KSPAddon(KSPAddon.Startup.EveryScene, false)]
+    [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class ConfigManager : MonoBehaviour
     {
         public static ConfigManager Instance { get; private set; }
@@ -136,37 +136,50 @@ namespace PlanetShine
             if (configFileNode.HasValue("stockToolbarEnabled"))
                 config.stockToolbarEnabled = bool.Parse(configFileNode.GetValue("stockToolbarEnabled"));
 
-            foreach (ConfigNode bodySettings in GameDatabase.Instance.GetConfigNodes("CelestialBodyColor"))
+            if (FlightGlobals.Bodies == null)
+                return;
+
+            foreach (ConfigNode bodySettings in GameDatabase.Instance.GetConfigNodes("CelestialBodyColor")) // Kept for retro-compatibility, will be removed soon
             {
-                try
+                LoadBody(bodySettings);
+            }
+
+            foreach (ConfigNode bodySettings in GameDatabase.Instance.GetConfigNodes("PlanetshineCelestialBody"))
+            {
+                LoadBody(bodySettings);
+            }
+        }
+
+        protected void LoadBody(ConfigNode bodySettings)
+        {
+            try
+            {
+                CelestialBody body = FlightGlobals.Bodies.Find(n => n.name == bodySettings.GetValue("name"));
+                if (FlightGlobals.Bodies.Contains(body))
                 {
-                    CelestialBody body = FlightGlobals.Bodies.Find(n => n.name == bodySettings.GetValue("name"));
-                    if (FlightGlobals.Bodies.Contains(body))
-                    {
-                        Color color = ConfigNode.ParseColor(bodySettings.GetValue("color"))
-                            * float.Parse(bodySettings.GetValue("intensity"));
-                        color.r = (color.r / 255f);
-                        color.g = (color.g / 255f);
-                        color.b = (color.b / 255f);
-                        color.a = 1;
-                        if (!config.celestialBodyInfos.ContainsKey(body))
-                            config.celestialBodyInfos.Add(body, new CelestialBodyInfo
-                                                          (
-                                                           color,
-                                                           float.Parse(bodySettings.GetValue("intensity")),
-                                                           float.Parse(bodySettings.GetValue("atmosphereAmbient")),
-                                                           float.Parse(bodySettings.GetValue("groundAmbientOverride"))
-                                                           ));
-                    }
+                    Color color = ConfigNode.ParseColor(bodySettings.GetValue("color"))
+                        * float.Parse(bodySettings.GetValue("intensity"));
+                    color.r = (color.r / 255f);
+                    color.g = (color.g / 255f);
+                    color.b = (color.b / 255f);
+                    color.a = 1;
+                    if (!config.celestialBodyInfos.ContainsKey(body))
+                        config.celestialBodyInfos.Add(body, new CelestialBodyInfo
+                                                      (
+                                                       color,
+                                                       float.Parse(bodySettings.GetValue("intensity")),
+                                                       float.Parse(bodySettings.GetValue("atmosphereAmbient")),
+                                                       float.Parse(bodySettings.GetValue("groundAmbientOverride"))
+                                                       ));
                 }
-                catch(Exception e)
-                {
-                    Debug.LogError(String.Format(
-                        "[PlanetShine] An exception occured reading CelestialBodyColor node:\n{0}\nThe exception was:\n{1}",
-                        bodySettings,
-                        e
-                    ));
-                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(String.Format(
+                    "[PlanetShine] An exception occured reading CelestialBodyColor node:\n{0}\nThe exception was:\n{1}",
+                    bodySettings,
+                    e
+                ));
             }
         }
 
