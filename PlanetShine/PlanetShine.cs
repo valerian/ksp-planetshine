@@ -1,4 +1,4 @@
-﻿/*
+/*
 * (C) Copyright 2014, Valerian Gaudeau
 * 
 * Kerbal Space Program is Copyright (C) 2013 Squad. See http://kerbalspaceprogram.com/. This
@@ -70,7 +70,28 @@ namespace PlanetShine
         public float lightIntensity;
         public Color vacuumColor;
 
-        public int fixedUpdateCounter = 0; 
+        public int fixedUpdateCounter = 0;
+
+        public void Awake()
+        {
+            if (Instance != null)
+                Destroy(Instance.gameObject);
+            Instance = this;
+        }
+
+        public void Start()
+        {
+            ambientLight = FindObjectOfType(typeof(DynamicAmbientLight)) as DynamicAmbientLight;
+
+            vacuumColor = new Color(config.vacuumLightLevel, config.vacuumLightLevel, config.vacuumLightLevel);
+            if (ambientLight != null)
+            {
+                ambientLight.vacuumAmbientColor = vacuumColor;
+            }
+
+            CreateAlbedoLights();
+            CreateDebugLines();
+        }
 
         private void CreateDebugLines()
         {
@@ -233,24 +254,6 @@ namespace PlanetShine
                         config.groundAmbientOverrideRatio * bodyGroundAmbientOverride;
                 }
             }
-        }
-
-
-        public void Start()
-        {
-            if (Instance != null)
-                Destroy (Instance.gameObject);
-            Instance = this;
-
-            ambientLight = FindObjectOfType(typeof(DynamicAmbientLight)) as DynamicAmbientLight;
-
-            vacuumColor = new Color (config.vacuumLightLevel, config.vacuumLightLevel, config.vacuumLightLevel);
-            if (ambientLight != null) {
-                ambientLight.vacuumAmbientColor = vacuumColor;
-            }
-
-            CreateAlbedoLights ();
-            CreateDebugLines ();
         }
 
         public void FixedUpdate()
