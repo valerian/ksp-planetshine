@@ -102,7 +102,7 @@ namespace PlanetShine
         private ConfigNode configFile;
         private ConfigNode configFileNode;
 
-        public void Start()
+        public void Awake()
         {
             if (Instance != null)
                 Destroy (Instance.gameObject);

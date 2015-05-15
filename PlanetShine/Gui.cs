@@ -42,7 +42,8 @@ namespace PlanetShine
         private int settingsLabelWidth = 100;
         private int updateCounter = 0;
 
-        internal Gui() {
+        public void Start()
+        {
             foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
             {
                 if (assembly.name == "Toolbar")
@@ -50,6 +51,8 @@ namespace PlanetShine
             }
             UpdateToolbarBlizzy();
             UpdateToolbarStock();
+            windowStyle = new GUIStyle(HighLogic.Skin.window);
+            tabStyle = new GUIStyle(HighLogic.Skin.window);
         }
 
         private void UpdateToolbarStock()
@@ -119,17 +122,7 @@ namespace PlanetShine
                 blizzyButton.TexturePath = isConfigDisplayed ? "PlanetShine/Icons/ps_enabled" : "PlanetShine/Icons/ps_disabled";
         }
 
-        public void Awake() { 
-            RenderingManager.AddToPostDrawQueue(0, OnDraw);
-        }
-
-        public void Start() {
-            windowStyle = new GUIStyle (HighLogic.Skin.window);
-            tabStyle = new GUIStyle (HighLogic.Skin.window);
-            //tabStyle.padding.bottom = 8;
-        }
-
-        private void OnDraw(){
+        private void OnGUI(){
             if (isConfigDisplayed) {
                 configWindowPosition = GUILayout.Window (143751300, configWindowPosition,
                                                          OnConfigWindow, "PlanetShine 0.2.3 - Early Beta", windowStyle);
