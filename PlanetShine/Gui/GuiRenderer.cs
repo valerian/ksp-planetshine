@@ -261,6 +261,9 @@ namespace PlanetShine
         {
             GUILayout.BeginVertical();
 
+            if (GUILayout.Button("Attempt Kopernicus Extraction"))
+                Kopernicus.GenerateCelestialBodyConfig();
+
             VariableDebugLabel("performanceTimerLast", planetShine.performanceTimerLast);
             VariableDebugLabel("body.name", planetShine.body.name);
             VariableDebugLabel("bodyColor", planetShine.bodyColor);

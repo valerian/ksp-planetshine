@@ -29,6 +29,29 @@ namespace PlanetShine
             return line;
         }
 
+        public static Texture2D LoadTextureDXT(byte[] ddsBytes, TextureFormat textureFormat)
+        {
+            if (textureFormat != TextureFormat.DXT1 && textureFormat != TextureFormat.DXT5)
+                throw new Exception("Invalid TextureFormat. Only DXT1 and DXT5 formats are supported by this method.");
+
+            byte ddsSizeCheck = ddsBytes[4];
+            if (ddsSizeCheck != 124)
+                throw new Exception("Invalid DDS DXTn texture. Unable to read");  //this header byte should be 124 for DDS image files
+
+            int height = ddsBytes[13] * 256 + ddsBytes[12];
+            int width = ddsBytes[17] * 256 + ddsBytes[16];
+
+            int DDS_HEADER_SIZE = 128;
+            byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
+            Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
+
+            Texture2D texture = new Texture2D(width, height, textureFormat, false);
+            texture.LoadRawTextureData(dxtBytes);
+            texture.Apply();
+
+            return texture;
+        }
+
         public static Color GetTextureAverageColor(Texture2D texture)
         {
             try
@@ -51,7 +74,7 @@ namespace PlanetShine
                     b += texColors[i].b;
 
                 }
-                return new Color((byte)(r / total), (byte)(g / total), (byte)(b / total), 0);
+                return new Color(r / total, g / total, b / total, 0);
             }
             catch (Exception e)
             {
@@ -63,8 +86,42 @@ namespace PlanetShine
             }
             return new Color();
         }
-    }
 
+        public static Texture2D LoadGameTextureFromPath(string path)
+        {
+            
+            string absolutePath = Application.dataPath + "/../GameData/" + path;
+            string[] extentions = { "dds", "tga", "png", "jpg", "jpeg" };
+
+            foreach (string extention in extentions)
+            {
+                try
+                {
+                    WWW www = new WWW("file://" + WWW.EscapeURL(absolutePath + "." + extention).Replace("%3A", ":").Replace("%2F", "/").Replace("+", "%20"));
+                    while (!www.isDone)
+                        System.Threading.Thread.Sleep(20);
+                    if (www.error != null)
+                        continue;
+                    if (extention == "dds")
+                    {
+                        return LoadTextureDXT(www.bytes, TextureFormat.DXT1);
+                    }
+                    else
+                    {
+                        Texture2D texture = new Texture2D(2048, 1024);
+                        www.LoadImageIntoTexture(texture);
+                        return texture;
+                    }
+                }
+                catch (Exception e)
+                {
+
+                }
+            }
+
+            return null;
+        }
+    }
     public class DisplaySettingOption<T>
     {
         public string label { get; private set; }
