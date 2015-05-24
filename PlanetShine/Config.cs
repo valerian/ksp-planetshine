@@ -1,4 +1,4 @@
-﻿/*
+/*
 * (C) Copyright 2014, Valerian Gaudeau
 * 
 * Kerbal Space Program is Copyright (C) 2013 Squad. See http://kerbalspaceprogram.com/. This
@@ -31,21 +31,24 @@ namespace PlanetShine
             }
         }
 
+        public bool blizzyToolbarInstalled = false;
+        public bool kopernicusInstalled = false;
+
         public static string[] qualityLabels = {"Low", "Medium", "High"};
         public static int maxAlbedoLightsQuantity = 4;
 
         public int quality { get; private set; }
         public bool useVertex = false;
         public int albedoLightsQuantity = 4;
-        public float baseAlbedoIntensity = 0.2f;
-        public float vacuumLightLevel = 0.02f;
+        public float baseAlbedoIntensity = 0.22f;
+        public float vacuumLightLevel = 0.03f;
         public float baseGroundAmbient = 0.50f;
         public float groundAmbientOverrideRatio = 0.5f;
         public float minAlbedoFadeAltitude = 0.02f;
         public float maxAlbedoFadeAltitude = 0.10f;
         public float minAmbientFadeAltitude = 0.00f;
         public float maxAmbientFadeAltitude = 0.08f;
-        public float albedoRange = 8f;
+        public float albedoRange = 9f;
         public bool debug = false;
         public int updateFrequency = 1;
         public Dictionary<CelestialBody, CelestialBodyInfo> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodyInfo>();
@@ -90,7 +93,7 @@ namespace PlanetShine
         public static float maxAlbedoFadeAltitude = 0.10f;
         public static float minAmbientFadeAltitude = 0.00f;
         public static float maxAmbientFadeAltitude = 0.08f;
-        public static float albedoRange = 8f;
+        public static float albedoRange = 9f;
     }
 
     
@@ -109,6 +112,14 @@ namespace PlanetShine
             Instance = this;
 
             LoadSettings ();
+
+            foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
+            {
+                if (assembly.name == "Toolbar")
+                    config.blizzyToolbarInstalled = true;
+                if (assembly.name == "Kopernicus")
+                    config.kopernicusInstalled = true;
+            }
         }
             
         public void LoadSettings()

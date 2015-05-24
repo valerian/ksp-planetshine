@@ -19,8 +19,6 @@ namespace PlanetShine
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class GuiManager : MonoBehaviour
     {
-        [System.ComponentModel.DefaultValue(false)]
-        public bool blizzyToolbarInstalled { get; private set; }
         public bool isConfigDisplayed
         {
             get
@@ -47,11 +45,6 @@ namespace PlanetShine
         public void Start()
         {
             guiRenderer = new GuiRenderer(this);
-            foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
-            {
-                if (assembly.name == "Toolbar")
-                    blizzyToolbarInstalled = true;
-            }
             UpdateToolbarBlizzy();
             UpdateToolbarStock();
         }
@@ -60,14 +53,14 @@ namespace PlanetShine
         {
             if (stockButton != null)
             {
-                if (!config.stockToolbarEnabled && blizzyToolbarInstalled)
+                if (!config.stockToolbarEnabled && config.blizzyToolbarInstalled)
                 {
                     ApplicationLauncher.Instance.RemoveModApplication(stockButton);
                     stockButton = null;
                 }
                 return;
             }
-            else if (!config.stockToolbarEnabled && blizzyToolbarInstalled)
+            else if (!config.stockToolbarEnabled && config.blizzyToolbarInstalled)
                 return;
             stockButton = ApplicationLauncher.Instance.AddModApplication(
                 () =>
@@ -92,7 +85,7 @@ namespace PlanetShine
 
         public void UpdateToolbarBlizzy()
         {
-            if (!blizzyToolbarInstalled)
+            if (!config.blizzyToolbarInstalled)
                 return;
             if (blizzyButton != null)
                 return;

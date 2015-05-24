@@ -198,7 +198,7 @@ namespace PlanetShine
         private void AdvancedTab()
         {
             PlanetShine.renderEnabled = GUILayout.Toggle(PlanetShine.renderEnabled, "Planetshine global ON/OFF");
-            if (guiManager.blizzyToolbarInstalled)
+            if (config.blizzyToolbarInstalled)
             {
                 bool stockToolbarEnabledOldValue = config.stockToolbarEnabled;
                 config.stockToolbarEnabled = GUILayout.Toggle(config.stockToolbarEnabled, "Use stock toolbar");

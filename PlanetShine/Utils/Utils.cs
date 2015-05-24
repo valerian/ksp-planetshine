@@ -1,4 +1,4 @@
-﻿/*
+/*
 * (C) Copyright 2014, Valerian Gaudeau
 * 
 * Kerbal Space Program is Copyright (C) 2013 Squad. See http://kerbalspaceprogram.com/. This
@@ -28,6 +28,41 @@ namespace PlanetShine
             line.SetVertexCount (2);
             return line;
         }
+
+        public static Color GetTextureAverageColor(Texture2D texture)
+        {
+            try
+            {
+                Color[] texColors = texture.GetPixels();
+
+                int total = texColors.Length;
+
+                float r = 0;
+                float g = 0;
+                float b = 0;
+
+                for (int i = 0; i < total; i++)
+                {
+
+                    r += texColors[i].r;
+
+                    g += texColors[i].g;
+
+                    b += texColors[i].b;
+
+                }
+                return new Color((byte)(r / total), (byte)(g / total), (byte)(b / total), 0);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(String.Format(
+                    "[PlanetShine] An exception occured while extracting color from a Texture2D:\n{0}\nThe exception was:\n{1}",
+                    texture,
+                    e
+                ));
+            }
+            return new Color();
+        }
     }
 
     public class DisplaySettingOption<T>
@@ -41,5 +76,7 @@ namespace PlanetShine
             this.value = value;
         }
     }
+
+
 }
 
