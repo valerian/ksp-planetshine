@@ -236,7 +236,7 @@ namespace PlanetShine
                 }
                       
                 albedoLight.light.color = bodyColor;
-                albedoLight.light.enabled = renderEnabled && (i < config.albedoLightsQuantity);
+                albedoLight.light.enabled = renderEnabled && (i < config.albedoLightsQuantity) && !MapView.MapIsEnabled;
                 i++;
             }
         }
@@ -246,7 +246,8 @@ namespace PlanetShine
             if (ambientLight != null) {
                 vacuumColor.r = vacuumColor.g = vacuumColor.b = config.vacuumLightLevel;
                 ambientLight.vacuumAmbientColor = vacuumColor;
-                if (renderEnabled) {
+                if (renderEnabled && !MapView.MapIsEnabled)
+                {
                     ambientLight.vacuumAmbientColor += atmosphereAmbientEffect * visibleLightAngleEffect * bodyColor;
                     RenderSettings.ambientLight = RenderSettings.ambientLight *
                         (1f - config.groundAmbientOverrideRatio * bodyGroundAmbientOverride);

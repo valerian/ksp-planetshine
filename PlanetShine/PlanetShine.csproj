@@ -71,7 +71,7 @@
     <PostBuildEvent>xcopy /Y $(TargetDir)$(TargetFileName) "C:\Kerbal Space Program\GameData\PlanetShine\Plugins\"
 xcopy /Y $(TargetDir)$(ProjectName).pdb "C:\Kerbal Space Program\GameData\PlanetShine\Plugins\"
 cd "C:\Kerbal Space Program\GameData\PlanetShine\Plugins\"
-"C:\Program Files (x86)\Unity\Editor\Data\MonoBleedingEdge\bin\cli.bat"  "C:\Program Files (x86)\Unity\Editor\Data\MonoBleedingEdge\lib\mono\4.0\pdb2mdb.exe" $(TargetFileName)
+"C:\Program Files\Unity\Editor\Data\MonoBleedingEdge\bin\cli.bat"  "C:\Program Files\Unity\Editor\Data\MonoBleedingEdge\lib\mono\4.5\pdb2mdb.exe" $(TargetFileName)
 </PostBuildEvent>
   </PropertyGroup>
 </Project>
