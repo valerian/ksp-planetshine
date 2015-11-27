@@ -180,7 +180,8 @@ namespace PlanetShine
                                                        color,
                                                        float.Parse(bodySettings.GetValue("intensity")),
                                                        float.Parse(bodySettings.GetValue("atmosphereAmbient")),
-                                                       float.Parse(bodySettings.GetValue("groundAmbientOverride"))
+                                                       float.Parse(bodySettings.GetValue("groundAmbientOverride")),
+                                                       (bodySettings.HasValue("isSun") ? bool.Parse(bodySettings.GetValue("isSun")) : false)
                                                        ));
                 }
             }
