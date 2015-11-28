@@ -200,7 +200,7 @@ namespace PlanetShine
         private void UpdateAlbedoLights()
         {
             // reminder: "body" means celestial body, which is the currently orbiting planet/moon/sun
-            // to avoid number rounding issues, we assume the body is 0.1% smaller
+            // to avoid number rounding issues, we shamelessly assume the body is 0.1% smaller
             bodyRadius = (float) body.Radius * 0.999f;
             // direction from the center of the body to the current vessel
             bodyVesselDirection = (FlightGlobals.ActiveVessel.transform.position - body.position).normalized;
@@ -211,7 +211,7 @@ namespace PlanetShine
             // distance between the current vessel and the center of the body
             vesselBodyDistance = (float) (FlightGlobals.ActiveVessel.transform.position - body.position).magnitude;
             // altitude of the vessel, based on the radius of the body
-            vesselAltitude = vesselBodyDistance - bodyRadius;
+            vesselAltitude = Math.Max(vesselBodyDistance - bodyRadius, 1.0f);
             // visible surface of the body as seen from the vessel, in % of the hemisphere's radius
             visibleSurface = vesselAltitude / (float) (FlightGlobals.ActiveVessel.transform.position - body.position).magnitude;
             // angle between the sun and the vessel, relative to the center of the body
@@ -246,8 +246,8 @@ namespace PlanetShine
             atmosphereAmbientEffect = bodyAtmosphereAmbient * config.baseGroundAmbient * atmosphereAmbientRatio;
             // approximation of the angle corresponding to the visible size of the enlightened aread of the body, relative to the vessel
             areaSpreadAngle = Math.Min(45f, (visibleLightRatio * (1f - (sunAngle / 180f)))
-                                       * Mathf.Rad2Deg * (float) Math.Acos(Math.Sqrt((vesselBodyDistance * vesselBodyDistance)
-                                                                                     - (bodyRadius * bodyRadius))
+                                       * Mathf.Rad2Deg * (float) Math.Acos(Math.Sqrt(Math.Max((vesselBodyDistance * vesselBodyDistance)
+                                                                                     - (bodyRadius * bodyRadius), 1.0f))
                                                                            / vesselBodyDistance));
             // % of the area spread angle, from 0 degrees to 45 degrees
             areaSpreadAngleRatio = Mathf.Clamp01(areaSpreadAngle / 45f);
