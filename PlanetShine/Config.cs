@@ -51,7 +51,7 @@ namespace PlanetShine
         public float albedoRange = 9f;
         public bool debug = false;
         public int updateFrequency = 1;
-        public Dictionary<CelestialBody, CelestialBodyInfo> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodyInfo>();
+        public Dictionary<CelestialBody, CelestialBodySettings> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodySettings>();
 
         public bool stockToolbarEnabled = true;
 
@@ -175,7 +175,7 @@ namespace PlanetShine
                     color.b = (color.b / 255f);
                     color.a = 1;
                     if (!config.celestialBodyInfos.ContainsKey(body))
-                        config.celestialBodyInfos.Add(body, new CelestialBodyInfo
+                        config.celestialBodyInfos.Add(body, new CelestialBodySettings
                                                       (
                                                        color,
                                                        float.Parse(bodySettings.GetValue("intensity")),

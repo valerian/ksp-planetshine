@@ -13,15 +13,17 @@ using UnityEngine;
 
 namespace PlanetShine
 {
-    public class CelestialBodyInfo
+    public class CelestialBodySettings
     {
+        public static CelestialBodySettings neutral = new CelestialBodySettings(new Color(100f/256f,100f/256f,100f/256f), 1.0f, 0.2f, 0.0f, false);
+
         public Color albedoColor;
         public float albedoIntensity;
         public float atmosphereAmbientLevel;
         public float groundAmbientOverride;
         public bool isSun;
 
-        public CelestialBodyInfo (Color albedoColor, float albedoIntensity, float atmosphereAmbientLevel, float groundAmbientOverride, bool isSun)
+        public CelestialBodySettings (Color albedoColor, float albedoIntensity, float atmosphereAmbientLevel, float groundAmbientOverride, bool isSun)
         {
             this.albedoColor = albedoColor;
             this.albedoIntensity = albedoIntensity;
