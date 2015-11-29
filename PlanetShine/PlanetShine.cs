@@ -153,7 +153,7 @@ namespace PlanetShine
                 bodyAtmosphereAmbient = config.celestialBodyInfos[body].atmosphereAmbientLevel;
                 bodyGroundAmbientOverride = config.celestialBodyInfos[body].groundAmbientOverride;
                 bodyIsSun = config.celestialBodyInfos[body].isSun;
-                if (Sun.Instance.sun == body)
+                if (Sun.Instance.sun == body || body.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0)
                     bodyIsSun = true;
             }
         }
