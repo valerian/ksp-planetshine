@@ -150,11 +150,6 @@ namespace PlanetShine
             if (FlightGlobals.Bodies == null)
                 return;
 
-            foreach (ConfigNode bodySettings in GameDatabase.Instance.GetConfigNodes("CelestialBodyColor")) // Kept for retro-compatibility, will be removed soon
-            {
-                LoadBody(bodySettings);
-            }
-
             foreach (ConfigNode bodySettings in GameDatabase.Instance.GetConfigNodes("PlanetshineCelestialBody"))
             {
                 LoadBody(bodySettings);
