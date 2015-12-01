@@ -139,22 +139,52 @@ namespace PlanetShine
 
         // Find current celestial body info and color in config, or use default neutral settings
         private void UpdateCelestialBody()
-        {            
+        {
+            if (body == FlightGlobals.ActiveVessel.mainBody)
+                return;
+
             body = FlightGlobals.ActiveVessel.mainBody;
             bodyColor = new Color(100f/256f,100f/256f,100f/256f);
-            bodyAtmosphereAmbient = 0.3f;
-            bodyIntensity = 1.0f;
-            bodyGroundAmbientOverride = 0.5f;
-            bodyIsSun = false;
+
+            MeshRenderer scaledBodyMesh = body.scaledBody.GetComponent<MeshRenderer>();
+            if (scaledBodyMesh != null)
+            {
+                Texture2D texture = Utils.CreateReadable((Texture2D)scaledBodyMesh.material.mainTexture);
+                if (texture != null)
+                {
+                    Color avgColor = Utils.GetTextureAverageColor(texture);
+                    bodyColor = avgColor;
+                    Destroy(texture);
+                }
+                                
+            }
+            
+            
+            bodyGroundAmbientOverride = 1.0f;
+
+
+            if (Sun.Instance.sun == body || body.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0)
+            {
+                bodyAtmosphereAmbient = 0.2f;
+                bodyIntensity = 6.0f;
+                bodyIsSun = true;
+            }
+            else
+            {
+                if (body.atmosphere)
+                    bodyAtmosphereAmbient = 1.0f;
+                else
+                    bodyAtmosphereAmbient = 0.2f;
+                bodyIntensity = 1.0f;
+                bodyIsSun = false;
+            }
 
             if (config.celestialBodyInfos.ContainsKey(body)) {
                 bodyColor = config.celestialBodyInfos[body].albedoColor;
                 bodyIntensity = config.celestialBodyInfos[body].albedoIntensity;
                 bodyAtmosphereAmbient = config.celestialBodyInfos[body].atmosphereAmbientLevel;
                 bodyGroundAmbientOverride = config.celestialBodyInfos[body].groundAmbientOverride;
-                bodyIsSun = config.celestialBodyInfos[body].isSun;
-                if (Sun.Instance.sun == body || body.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0)
-                    bodyIsSun = true;
+                bodyIsSun = config.celestialBodyInfos[body].isSun | bodyIsSun;
             }
         }
 

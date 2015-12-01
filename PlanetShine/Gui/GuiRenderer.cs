@@ -260,10 +260,15 @@ namespace PlanetShine
         private void OnDebugWindow(int windowID)
         {
             GUILayout.BeginVertical();
+
+            
+
             VariableDebugLabel("MapView.MapIsEnabled", MapView.MapIsEnabled);
             VariableDebugLabel("performanceTimerLast", planetShine.performanceTimerLast);
             VariableDebugLabel("body.name", planetShine.body.name);
+            GUI.contentColor = planetShine.bodyColor;
             VariableDebugLabel("bodyColor", planetShine.bodyColor);
+            GUI.contentColor = originalTextColor;
             VariableDebugLabel("bodyAtmosphereAmbient", planetShine.bodyAtmosphereAmbient);
             VariableDebugLabel("bodyIntensity", planetShine.bodyIntensity);
             VariableDebugLabel("bodyRadius", planetShine.bodyRadius);

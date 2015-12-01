@@ -41,17 +41,13 @@ namespace PlanetShine
                 float g = 0;
                 float b = 0;
 
-                for (int i = 0; i < total; i++)
+                foreach (Color pixel in texColors)
                 {
-
-                    r += texColors[i].r;
-
-                    g += texColors[i].g;
-
-                    b += texColors[i].b;
-
+                    r += pixel.r;
+                    g += pixel.g;
+                    b += pixel.b;
                 }
-                return new Color(r / total, g / total, b / total, 0);
+                return new Color(r / total, g / total, b / total, 1.0f);
             }
             catch (Exception e)
             {
