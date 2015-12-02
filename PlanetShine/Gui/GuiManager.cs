@@ -117,7 +117,6 @@ namespace PlanetShine
         }
         
         private void OnDestroy() {
-            Logger.Log("Gui->OnDestroy");
             if (stockButton != null)
                 ApplicationLauncher.Instance.RemoveModApplication(stockButton);
             if (blizzyButton != null)
