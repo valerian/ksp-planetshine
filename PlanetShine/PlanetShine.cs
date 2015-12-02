@@ -13,6 +13,7 @@ using System.Collections;
 using System;
 using System.IO;
 using UnityEngine;
+using System.Reflection;
 
 namespace PlanetShine
 {
@@ -149,6 +150,8 @@ namespace PlanetShine
         // Find current celestial body info and color in config, or use default neutral settings
         private void UpdateCelestialBody()
         {
+            //TODO seriously clean this big mess, it's a priority
+            //TODO try to find a temporary alternative color to unloaded textures
             if (body == FlightGlobals.ActiveVessel.mainBody &&
                 (bodyTextureLoaded || Sun.Instance.sun == body || body.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0))
                 return;
@@ -176,7 +179,24 @@ namespace PlanetShine
             else
             {
                 if (body.scaledBody.renderer.sharedMaterial.mainTexture == null)
+                {
+                    Logger.Log("No Scaled Space texture found, looking for Kopernicus ScaledSpaceDemand");
+                    var scaledSpaceDemand = body.scaledBody.GetComponent("ScaledSpaceDemand");
+                    if (scaledSpaceDemand == null)
+                    {
+                        Logger.Log("Kopernicus ScaledSpaceDemand not found");
+                        return;
+                    }
+                    scaledSpaceDemand.GetType().GetMethod("OnBecameVisible", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(scaledSpaceDemand, null);
+                    Logger.Log("Succesfully triggered Kopernicus ScaledSpaceDemand");
+                }
+
+                if (body.scaledBody.renderer.sharedMaterial.mainTexture == null)
+                {
+                    Logger.Log("Still no texture!");
                     return;
+                }
+
                 bodyTextureLoaded = true;
                 bodyTextureColor = Utils.GetUnreadableTextureAverageColor((Texture2D)body.scaledBody.renderer.sharedMaterial.mainTexture);
                 bodyColor = bodyTextureColor;
@@ -251,6 +271,9 @@ namespace PlanetShine
         // thise is where all the calculation and rendering of albedo lights occur
         private void UpdateAlbedoLights()
         {
+            // TODO use ACTUAL atmosphere height! Maybe use atmosphere gradient as well
+            // TODO try to simplify
+
             // reminder: "body" means celestial body, which is the currently orbiting planet/moon/sun
             // to avoid number rounding issues, we shamelessly assume the body is 0.1% smaller
             bodyRadius = (float) body.Radius * 0.999f;
@@ -318,6 +341,7 @@ namespace PlanetShine
                 * lightDistanceEffect * bodyIntensity;
 
             // boosting light intensity when there are multiple rendering lights spread with a wide angle
+            // TODO check if it's still fine with the new 60 degree max (was 45 before)
             if (albedoLightsQuantity > 1 )
                 lightIntensity *= 1f + (areaSpreadAngleRatio * areaSpreadAngleRatio * 0.5f);
             
@@ -356,6 +380,8 @@ namespace PlanetShine
                 ambientLight.vacuumAmbientColor = vacuumColor;
                 if (renderEnabled && !MapView.MapIsEnabled)
                 {
+                    //TODO bring back ambient light mixed with vacuumColor, because ambient light only works on very low altitudes
+                    //TODO find ambientlight fading curve
                     RenderSettings.ambientLight = RenderSettings.ambientLight *
                         (1f - (config.groundAmbientOverrideRatio * bodyGroundAmbientOverride));
                     RenderSettings.ambientLight += (atmosphereAmbientEffect * visibleLightAngleEffect * bodyColor) *
