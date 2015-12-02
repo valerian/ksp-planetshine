@@ -40,15 +40,15 @@ namespace PlanetShine
         public int quality { get; private set; }
         public bool useVertex = false;
         public int albedoLightsQuantity = 4;
-        public float baseAlbedoIntensity = 0.22f;
+        public float baseAlbedoIntensity = 0.24f;
         public float vacuumLightLevel = 0.03f;
-        public float baseGroundAmbient = 0.50f;
-        public float groundAmbientOverrideRatio = 0.5f;
+        public float baseGroundAmbient = 0.60f;
+        public float groundAmbientOverrideRatio = 0.60f;
         public float minAlbedoFadeAltitude = 0.02f;
         public float maxAlbedoFadeAltitude = 0.10f;
         public float minAmbientFadeAltitude = 0.00f;
-        public float maxAmbientFadeAltitude = 0.08f;
-        public float albedoRange = 9f;
+        public float maxAmbientFadeAltitude = 0.10f;
+        public float albedoRange = 10f;
         public bool debug = false;
         public int updateFrequency = 1;
         public Dictionary<CelestialBody, CelestialBodyInfo> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodyInfo>();
@@ -85,15 +85,15 @@ namespace PlanetShine
     {
         private ConfigDefaults(){}
 
-        public static float baseAlbedoIntensity = 0.22f;
+        public static float baseAlbedoIntensity = 0.24f;
         public static float vacuumLightLevel = 0.03f;
-        public static float baseGroundAmbient = 0.50f;
-        public static float groundAmbientOverrideRatio = 0.5f;
+        public static float baseGroundAmbient = 0.60f;
+        public static float groundAmbientOverrideRatio = 0.60f;
         public static float minAlbedoFadeAltitude = 0.02f;
         public static float maxAlbedoFadeAltitude = 0.10f;
         public static float minAmbientFadeAltitude = 0.00f;
-        public static float maxAmbientFadeAltitude = 0.08f;
-        public static float albedoRange = 9f;
+        public static float maxAmbientFadeAltitude = 0.10f;
+        public static float albedoRange = 10f;
     }
 
     
