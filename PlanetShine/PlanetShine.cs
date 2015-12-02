@@ -40,11 +40,20 @@ namespace PlanetShine
         // information related to the currently orbiting body
         public CelestialBody body;
         public Color bodyColor;
+
+        public Color bodyTextureColor;
+        public Color bodyAtmosphereColor;
+
+        // TODO remove later, for debugging only
+        public Texture2D bodyRimTexture = null;
+
         public float bodyAtmosphereAmbient;
         public float bodyGroundAmbientOverride;
         public float bodyIntensity;
         public float bodyRadius;
         public bool bodyIsSun = false;
+
+        public bool bodyTextureLoaded = false;
 
         // data for calculating and rendering albedo and ambient lights
         public Vector3 bodyVesselDirection;
@@ -140,45 +149,58 @@ namespace PlanetShine
         // Find current celestial body info and color in config, or use default neutral settings
         private void UpdateCelestialBody()
         {
-            if (body == FlightGlobals.ActiveVessel.mainBody)
+            if (body == FlightGlobals.ActiveVessel.mainBody &&
+                (bodyTextureLoaded || Sun.Instance.sun == body || body.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0))
                 return;
 
+            bodyTextureLoaded = false;
             body = FlightGlobals.ActiveVessel.mainBody;
             bodyColor = new Color(100f/256f,100f/256f,100f/256f);
-
-            MeshRenderer scaledBodyMesh = body.scaledBody.GetComponent<MeshRenderer>();
-            if (scaledBodyMesh != null)
-            {
-                Texture2D texture = Utils.CreateReadable((Texture2D)scaledBodyMesh.material.mainTexture);
-                if (texture != null)
-                {
-                    Color avgColor = Utils.GetTextureAverageColor(texture);
-                    bodyColor = avgColor;
-                    Destroy(texture);
-                }
-                                
-            }
-            
-            
+            bodyTextureColor = new Color(100f / 256f, 100f / 256f, 100f / 256f);
+            bodyAtmosphereColor = new Color(100f / 256f, 100f / 256f, 100f / 256f);
             bodyGroundAmbientOverride = 1.0f;
-
+            
+            if (bodyRimTexture != null)
+            {
+                Destroy(bodyRimTexture);
+                bodyRimTexture = null;
+            }
 
             if (Sun.Instance.sun == body || body.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0)
             {
+                //TODO extract color from shader and/or sunlight
                 bodyAtmosphereAmbient = 0.2f;
                 bodyIntensity = 6.0f;
                 bodyIsSun = true;
             }
             else
             {
+                if (body.scaledBody.renderer.sharedMaterial.mainTexture == null)
+                    return;
+                bodyTextureLoaded = true;
+                bodyTextureColor = Utils.GetUnreadableTextureAverageColor((Texture2D)body.scaledBody.renderer.sharedMaterial.mainTexture);
+                bodyColor = bodyTextureColor;
+
                 if (body.atmosphere)
+                {
                     bodyAtmosphereAmbient = 1.0f;
+                    if (body.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp") != null)
+                    {
+                        bodyRimTexture = Utils.CreateReadable((Texture2D)body.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp"));
+                        bodyAtmosphereColor = Utils.GetRimOuterColor(bodyRimTexture, 0.2f);
+                        bodyColor = (bodyColor * 0.6f) + (bodyAtmosphereColor * 0.4f);
+                        bodyColor.a = 1.0f;
+                    }
+                }
                 else
+                {
                     bodyAtmosphereAmbient = 0.2f;
+                }
                 bodyIntensity = 1.0f;
                 bodyIsSun = false;
             }
 
+            //TODO set on a per-attribute override
             if (config.celestialBodyInfos.ContainsKey(body)) {
                 bodyColor = config.celestialBodyInfos[body].albedoColor;
                 bodyIntensity = config.celestialBodyInfos[body].albedoIntensity;
@@ -275,12 +297,12 @@ namespace PlanetShine
             // atmosphere ambient light intensity modificator based on several combined settings
             atmosphereAmbientEffect = bodyAtmosphereAmbient * config.baseGroundAmbient * atmosphereAmbientRatio;
             // approximation of the angle corresponding to the visible size of the enlightened aread of the body, relative to the vessel
-            areaSpreadAngle = Math.Min(45f, (visibleLightRatio * (1f - (sunAngle / 180f)))
+            areaSpreadAngle = Math.Min(60f, (visibleLightRatio * (1f - (sunAngle / 180f)))
                                        * Mathf.Rad2Deg * (float) Math.Acos(Math.Sqrt(Math.Max((vesselBodyDistance * vesselBodyDistance)
                                                                                      - (bodyRadius * bodyRadius), 1.0f))
                                                                            / vesselBodyDistance));
-            // % of the area spread angle, from 0 degrees to 45 degrees
-            areaSpreadAngleRatio = Mathf.Clamp01(areaSpreadAngle / 45f);
+            // % of the area spread angle, from 0 degrees to 60 degrees
+            areaSpreadAngleRatio = Mathf.Clamp01(areaSpreadAngle / 60f);
             // max range of the albedo effect, based on the body radius and the settings
             lightRange = bodyRadius * config.albedoRange;
             // albedo light intensity modificator caused by the distance from the body, and based on the max range
@@ -334,11 +356,10 @@ namespace PlanetShine
                 ambientLight.vacuumAmbientColor = vacuumColor;
                 if (renderEnabled && !MapView.MapIsEnabled)
                 {
-                    ambientLight.vacuumAmbientColor += atmosphereAmbientEffect * visibleLightAngleEffect * bodyColor;
                     RenderSettings.ambientLight = RenderSettings.ambientLight *
-                        (1f - config.groundAmbientOverrideRatio * bodyGroundAmbientOverride);
-                    RenderSettings.ambientLight += ambientLight.vacuumAmbientColor *
-                        config.groundAmbientOverrideRatio * bodyGroundAmbientOverride;
+                        (1f - (config.groundAmbientOverrideRatio * bodyGroundAmbientOverride));
+                    RenderSettings.ambientLight += (atmosphereAmbientEffect * visibleLightAngleEffect * bodyColor) *
+                        (config.groundAmbientOverrideRatio * bodyGroundAmbientOverride);
                 }
             }
         }

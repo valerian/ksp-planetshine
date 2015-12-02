@@ -29,35 +29,39 @@ namespace PlanetShine
             return line;
         }
 
+        public static Color GetUnreadableTextureAverageColor(Texture2D texture)
+        {
+            Texture2D readableTexture = CreateReadable(texture);
+            Color color = GetTextureAverageColor(readableTexture);
+            UnityEngine.Object.Destroy(readableTexture);
+            return color;
+        }
+
+        public static Color GetPixelsAverageColor(Color[] texColors)
+        {
+            int total = texColors.Length;
+
+            float r = 0;
+            float g = 0;
+            float b = 0;
+
+            foreach (Color pixel in texColors)
+            {
+                r += pixel.r;
+                g += pixel.g;
+                b += pixel.b;
+            }
+            return new Color(r / total, g / total, b / total, 1.0f);
+        }
+
         public static Color GetTextureAverageColor(Texture2D texture)
         {
-            try
-            {
-                Color[] texColors = texture.GetPixels();
+            return GetPixelsAverageColor(texture.GetPixels());
+        }
 
-                int total = texColors.Length;
-
-                float r = 0;
-                float g = 0;
-                float b = 0;
-
-                foreach (Color pixel in texColors)
-                {
-                    r += pixel.r;
-                    g += pixel.g;
-                    b += pixel.b;
-                }
-                return new Color(r / total, g / total, b / total, 1.0f);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(String.Format(
-                    "[PlanetShine] An exception occured while extracting color from a Texture2D:\n{0}\nThe exception was:\n{1}",
-                    texture,
-                    e
-                ));
-            }
-            return new Color();
+        public static Color GetRimOuterColor(Texture2D texture, float fraction)
+        {
+            return GetPixelsAverageColor(texture.GetPixels(0, 0, (int) Math.Round(texture.width * fraction), texture.height));
         }
 
         public static Texture2D CreateReadable(Texture2D original)
