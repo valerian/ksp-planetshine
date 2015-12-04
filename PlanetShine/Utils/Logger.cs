@@ -1,4 +1,4 @@
-﻿#region Using Directives
+#region Using Directives
 
 using System;
 using System.Collections;
@@ -118,6 +118,16 @@ namespace PlanetShine
             lock (messages)
             {
                 messages.Add(new[] { "Log " + DateTime.Now.TimeOfDay, message });
+            }
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        [System.Diagnostics.DebuggerStepThrough]
+        public static void Debug(string message)
+        {
+            lock (messages)
+            {
+                messages.Add(new[] { "Debug " + DateTime.Now.TimeOfDay, message });
             }
         }
 
