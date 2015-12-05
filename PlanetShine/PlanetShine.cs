@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using System.Reflection;
 
@@ -55,6 +56,9 @@ namespace PlanetShine
         public bool bodyIsSun = false;
 
         public bool bodyTextureLoaded = false;
+
+        public float eveCoverage = 0;
+        public Color eveColor = new Color(0, 0, 0, 1);
 
         // data for calculating and rendering albedo and ambient lights
         public Vector3 bodyVesselDirection;
@@ -156,16 +160,24 @@ namespace PlanetShine
                 (bodyTextureLoaded || Sun.Instance.sun == body || body.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0))
                 return;
 
+            Logger.Log("RAM usage at UpdateCelestialBody() start: " + Config.Instance.ramUsage + " MB");
+
             bodyTextureLoaded = false;
             body = FlightGlobals.ActiveVessel.mainBody;
             bodyColor = new Color(100f/256f,100f/256f,100f/256f);
             bodyTextureColor = new Color(100f / 256f, 100f / 256f, 100f / 256f);
             bodyAtmosphereColor = new Color(100f / 256f, 100f / 256f, 100f / 256f);
+            bodyIntensity = 1f;
             bodyGroundAmbientOverride = 1.0f;
-            
+
+            /*GC.GetTotalMemory(true);
+            return;*/
+
             if (bodyRimTexture != null)
             {
-                Destroy(bodyRimTexture);
+                Logger.Log("RAM usage before Texture2D.DestroyImmediate(bodyRimTexture): " + Config.Instance.ramUsage + " MB");
+                Texture2D.DestroyImmediate(bodyRimTexture);
+                Logger.Log("RAM usage after Texture2D.DestroyImmediate(bodyRimTexture): " + Config.Instance.ramUsage + " MB");
                 bodyRimTexture = null;
             }
 
@@ -198,12 +210,16 @@ namespace PlanetShine
                 }
 
                 bodyTextureLoaded = true;
+                Logger.Log("RAM usage before bodyTextureColor: " + Config.Instance.ramUsage + " MB");
                 bodyTextureColor = Utils.GetUnreadableTextureAverageColor((Texture2D)body.scaledBody.renderer.sharedMaterial.mainTexture);
+                Logger.Log("RAM usage after bodyTextureColor: " + Config.Instance.ramUsage + " MB");
                 bodyColor = bodyTextureColor;
 
                 if (body.atmosphere)
                 {
                     bodyAtmosphereAmbient = 1.0f;
+
+                    // adding atmosphere shader color
                     if (body.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp") != null)
                     {
                         bodyRimTexture = Utils.CreateReadable((Texture2D)body.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp"));
@@ -211,6 +227,91 @@ namespace PlanetShine
                         bodyColor = (bodyColor * 0.6f) + (bodyAtmosphereColor * 0.4f);
                         bodyColor.a = 1.0f;
                     }
+
+                    // trying to add eve clouds color
+
+                    UnityEngine.Object[] cloudsObjectList = null;
+
+                    Type cloudsObjectType = Utils.FindTypeContains("CloudsObject");
+                    Logger.Log("CloudsObject type: " + cloudsObjectType);
+                    if (cloudsObjectType != null)
+                    {
+                        cloudsObjectList = FindObjectsOfType(cloudsObjectType);
+                    }
+
+                    if (cloudsObjectList != null && cloudsObjectList.Length > 0)
+                    {
+
+                        List<Material> cloudMaterials = new List<Material>();
+                        Dictionary<Material, Texture2D> cloudReadableTextures = new Dictionary<Material, Texture2D>();
+                        Dictionary<Material, float> cloudCoverages = new Dictionary<Material, float>();
+
+                        foreach (var cloudObject in cloudsObjectList)
+                        {
+                            if ((string)cloudsObjectType.GetProperty("Body").GetValue(cloudObject, null) == body.name)
+                            {
+                                var allFields = cloudsObjectType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+                                var layer2DField = cloudsObjectType.GetField("layer2D", BindingFlags.Instance | BindingFlags.NonPublic);
+                                var layer2D = layer2DField.GetValue(cloudObject);
+                                var CloudMaterialField = layer2D.GetType().GetField("CloudMaterial", BindingFlags.Instance | BindingFlags.NonPublic);
+                                Material CloudMaterial = (Material)CloudMaterialField.GetValue(layer2D);
+                                cloudMaterials.Add(CloudMaterial);
+                                cloudReadableTextures.Add(CloudMaterial, Utils.CreateReadable((Texture2D)CloudMaterial.mainTexture));
+                            }
+                        }
+
+                        eveCoverage = 0;
+                        eveColor = new Color(0, 0, 0, 1);
+                        float alphaSum = 0;
+                        foreach (var cloudReadableTexture in cloudReadableTextures)
+                            cloudCoverages.Add(cloudReadableTexture.Key, Utils.GetTextureAverageAlpha(cloudReadableTexture.Value));
+
+                        if (cloudMaterials.Count == 1)
+                            Logger.Log("EVE textures for " + body.name + ": only 1");
+                        else
+                            Logger.Log("EVE textures for " + body.name + ": multiple, does " + (Utils.DoTexturesMatch(cloudReadableTextures.Select(o => o.Value).ToArray()) ? "" : "not ") + "match");
+
+
+                        if (cloudMaterials.Count > 1 && Utils.DoTexturesMatch(cloudReadableTextures.Select(o => o.Value).ToArray()))
+                        {
+                            eveCoverage = Utils.GetTexturesCombinedAlpha(cloudReadableTextures.Select(o => o.Value).ToArray());
+                        }
+                        else
+                        {
+                            foreach (var coverage in cloudCoverages)
+                                if (coverage.Value > eveCoverage)
+                                    eveCoverage = coverage.Value;
+
+                            if (cloudMaterials.Count == 2)
+                                eveCoverage += (1.0f - eveCoverage) * 0.2f;
+                            else if (cloudMaterials.Count >= 3)
+                                eveCoverage += (1.0f - eveCoverage) * 0.4f;
+                        }
+
+
+                        foreach (var coverage in cloudCoverages)
+                        {
+                            Logger.Log("EVE texture color for " + body.name + ": " + coverage.Key.color);
+                            alphaSum += coverage.Value;
+                            eveColor.r += coverage.Key.color.r * coverage.Value;
+                            eveColor.g += coverage.Key.color.g * coverage.Value;
+                            eveColor.b += coverage.Key.color.b * coverage.Value;
+                        }
+
+                        eveColor.r /= alphaSum;
+                        eveColor.g /= alphaSum;
+                        eveColor.b /= alphaSum;
+
+                        bodyColor = bodyColor * (1.0f - eveCoverage) + eveColor * eveCoverage;
+
+                        foreach (var cloudReadableTexture in cloudReadableTextures)
+                        {
+                            Logger.Log("RAM usage before Texture2D.DestroyImmediate(cloudReadableTexture.Value): " + Config.Instance.ramUsage + " MB");
+                            Texture2D.DestroyImmediate(cloudReadableTexture.Value);
+                            Logger.Log("RAM usage after Texture2D.DestroyImmediate(cloudReadableTexture.Value): " + Config.Instance.ramUsage + " MB");
+                        }
+                    }
+
                 }
                 else
                 {

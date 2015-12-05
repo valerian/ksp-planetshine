@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System;
 using System.IO;
+//using System.Diagnostics;
 using UnityEngine;
 
 namespace PlanetShine
@@ -21,13 +22,33 @@ namespace PlanetShine
     {
         private static readonly Config instance = new Config();
 
-        private Config(){}
+        private Config()
+        {
+            //ramCounter = new PerformanceCounter("Process", "Working Set - Private");
+            //ramCounter.InstanceName = "KSP.exe";
+        }
 
         public static Config Instance
         {
             get 
             {
                 return instance; 
+            }
+        }
+
+        //private PerformanceCounter ramCounter = new PerformanceCounter("Process", "Working Set - Private");
+        public uint ramUsage
+        {
+            get
+            {
+                //var ramCounter = new PerformanceCounter("Process", "Working Set - Private");
+                //ramCounter.InstanceName = "KSP.exe";
+                //return Convert.ToInt32(ramCounter.NextValue()) / ((int)(1024) * (int)(1024));
+                //return Convert.ToInt32(GC.GetTotalMemory(true) / (1024 * 1024));
+                Profiler.enabled = true;
+                GC.GetTotalMemory(true);
+                return Profiler.GetMonoUsedSize();
+                //return 0;
             }
         }
 
@@ -182,7 +203,7 @@ namespace PlanetShine
             }
             catch (Exception e)
             {
-                Debug.LogError(String.Format(
+                UnityEngine.Debug.LogError(String.Format(
                     "[PlanetShine] An exception occured reading CelestialBodyColor node:\n{0}\nThe exception was:\n{1}",
                     bodySettings,
                     e

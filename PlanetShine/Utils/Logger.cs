@@ -61,6 +61,22 @@ namespace PlanetShine
             }
         }
 
+        [System.Diagnostics.Conditional("DEBUG")]
+        [System.Diagnostics.DebuggerStepThrough]
+        public static void DebugRam()
+        {
+            lock (messages)
+            {
+                Profiler.enabled = true;
+                messages.Add(new[] { "Debug Ram " + DateTime.Now.TimeOfDay,
+                    string.Concat(
+                        "Mono used size: ", Profiler.GetMonoUsedSize(), " KB, ",
+                        "Mono heap size: ", Profiler.GetMonoHeapSize(), " KB, ",
+                        "Total allocated RAM: ", Profiler.GetTotalAllocatedMemory(), " KB"
+                        ) });
+            }
+        }
+
         public static void Log(object obj)
         {
             lock (messages)

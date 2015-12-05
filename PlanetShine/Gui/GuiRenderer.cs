@@ -268,6 +268,8 @@ namespace PlanetShine
                 GUI.Box(new Rect(0, 64, 512, 16), planetShine.body.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp"));
             }
 
+            VariableDebugLabel("RAM used", config.ramUsage + " MB");
+
             GUI.contentColor = planetShine.bodyColor;
             VariableDebugLabel("bodyColor", planetShine.bodyColor);
             GUI.contentColor = originalTextColor;
@@ -278,6 +280,10 @@ namespace PlanetShine
 
             GUI.contentColor = planetShine.bodyAtmosphereColor;
             VariableDebugLabel("bodyAtmosphereColor", planetShine.bodyAtmosphereColor);
+            GUI.contentColor = originalTextColor;
+
+            GUI.contentColor = planetShine.eveColor;
+            VariableDebugLabel("eveColor", planetShine.eveColor);
             GUI.contentColor = originalTextColor;
 
             GUI.contentColor = planetShine.body.atmosphericAmbientColor;
@@ -291,6 +297,7 @@ namespace PlanetShine
 
             VariableDebugLabel("bodyAtmosphereAmbient", planetShine.bodyAtmosphereAmbient);
             VariableDebugLabel("bodyIntensity", planetShine.bodyIntensity);
+            VariableDebugLabel("eveCoverage", planetShine.eveCoverage);
             VariableDebugLabel("bodyRadius", planetShine.bodyRadius);
             VariableDebugLabel("bodyVesselDirection", planetShine.bodyVesselDirection);
             VariableDebugLabel("bodySunDirection", planetShine.bodySunDirection);
