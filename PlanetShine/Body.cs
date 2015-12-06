@@ -130,7 +130,8 @@ namespace PlanetShine
             try
             {
                 texture = ((Texture2D)celestialBody.scaledBody.renderer.sharedMaterial.mainTexture).CreateReadable();
-                terrainColor = texture.GetAverageColor();
+                Logger.Debug("GetAverageColor TERRAIN");
+                terrainColor = texture.GetAverageColorFast();
                 Logger.Debug("Successfully determined terrain color");
                 return true;
             }
@@ -190,7 +191,8 @@ namespace PlanetShine
                     return false;
                 }
                 readableRim = rim.CreateReadable();
-                atmosphereColor = readableRim.GetAverageColor(0, 0, readableRim.width / 5, readableRim.height);
+                Logger.Debug("GetAverageColor RIM");
+                atmosphereColor = readableRim.GetAverageColorPartial(0, 0, readableRim.width / 5, readableRim.height);
 
                 // TODO determine coverage based on rimPower and rimBlend
                 atmosphereScaledCoverage = 0.33f;

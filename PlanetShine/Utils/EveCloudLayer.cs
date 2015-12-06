@@ -17,7 +17,10 @@ namespace PlanetShine
             Logger.DebugRam("EveCloudLayer Constructor start");
             color = layer2D.color;
             texture = ((Texture2D)layer2D.mainTexture).CreateReadable();
-            coverage = texture.GetAverageColor().a;
+            Logger.Debug("EveCloudLayer texture apply");
+            texture.Apply(true);
+            Logger.Debug("GetAverageColor EVE");
+            coverage = texture.GetAverageColorFast().a;
             Logger.DebugRam("EveCloudLayer Constructor end");
         }
 
@@ -95,7 +98,10 @@ namespace PlanetShine
             Color[][] pixels = new Color[layers.Count][];
 
             for (int i = 0; i < layers.Count; i++)
-                pixels[i] = layers[i].texture.GetPixels();
+            {
+                Logger.DebugRam("EveCloudLayer GetCombinedAlpha before getpixels #" + i);
+                pixels[i] = layers[i].texture.GetPixels(layers[i].texture.GetInverseMipLevel(8));
+            }
 
             int pixelCount = pixels[0].Length;
             float totalAlpha = 0;
