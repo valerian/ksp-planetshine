@@ -56,7 +56,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Body.cs" />
+    <Compile Include="CelestialBodiesManager.cs" />
     <Compile Include="Gui\GuiRenderer.cs" />
+    <Compile Include="Utils\EveCloudLayer.cs" />
+    <Compile Include="Utils\Extensions\GameDatabaseExtensions.cs" />
+    <Compile Include="Utils\Extensions\TextureExtensions.cs" />
     <Compile Include="Utils\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Config.cs" />

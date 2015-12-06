@@ -63,12 +63,15 @@ namespace PlanetShine
 
         [System.Diagnostics.Conditional("DEBUG")]
         [System.Diagnostics.DebuggerStepThrough]
-        public static void DebugRam()
+        public static void DebugRam(string message)
         {
             lock (messages)
             {
+                GC.Collect();
+                Resources.UnloadUnusedAssets();
                 Profiler.enabled = true;
-                messages.Add(new[] { "Debug Ram " + DateTime.Now.TimeOfDay,
+                messages.Add(new[] { "Debug RAM " + DateTime.Now.TimeOfDay, message });
+                messages.Add(new[] { "Debug RAM " + DateTime.Now.TimeOfDay,
                     string.Concat(
                         "Mono used size: ", Profiler.GetMonoUsedSize(), " KB, ",
                         "Mono heap size: ", Profiler.GetMonoHeapSize(), " KB, ",

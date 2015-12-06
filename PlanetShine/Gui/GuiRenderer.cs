@@ -40,7 +40,7 @@ namespace PlanetShine
         public bool Render(PlanetShine planetShine)
         {
             configWindowPosition = GUILayout.Window(143751300, configWindowPosition,
-                                         OnConfigWindow, "PlanetShine 0.2.4.2 - Beta", windowStyle);
+                                         OnConfigWindow, "PlanetShine 0.5.0 - Beta", windowStyle);
             if (config.debug && PlanetShine.Instance != null)
             {
                 debugWindowPosition = GUILayout.Window(143751301, debugWindowPosition,
@@ -187,8 +187,8 @@ namespace PlanetShine
             GUILayout.Space(20);
 
             GUILayout.Label("Planetshine maximum range: " + config.albedoRange);
-            GUILayout.Label("(approximately " + Math.Round(config.albedoRange * planetShine.bodyRadius / 2000f) +
-                             "km from " + planetShine.body.name + ")");
+            GUILayout.Label("(approximately " + Math.Round(config.albedoRange * planetShine.bodySubRadius / 2000f) +
+                             "km from " + planetShine.body.celestialBody.name + ")");
             GUILayout.BeginHorizontal();
             config.albedoRange = (float)Math.Round(GUILayout.HorizontalSlider(config.albedoRange, 0.0f, 20f), 1);
             ResetButton(ref config.albedoRange, ConfigDefaults.albedoRange);
@@ -211,9 +211,9 @@ namespace PlanetShine
 
             GUI.contentColor = new Color(0.8f, 1.0f, 0.8f);
             GUILayout.Label("Planetshine fade altitude: " + config.minAlbedoFadeAltitude + " to " + config.maxAlbedoFadeAltitude);
-            GUILayout.Label("(from " + Math.Round(config.minAlbedoFadeAltitude * planetShine.bodyRadius / 1000f) +
-                             "km to " + Math.Round(config.maxAlbedoFadeAltitude * planetShine.bodyRadius / 1000f) +
-                             "km on " + planetShine.body.name + ")");
+            GUILayout.Label("(from " + Math.Round(config.minAlbedoFadeAltitude * planetShine.bodySubRadius / 1000f) +
+                             "km to " + Math.Round(config.maxAlbedoFadeAltitude * planetShine.bodySubRadius / 1000f) +
+                             "km on " + planetShine.body.celestialBody.name + ")");
             GUI.contentColor = originalTextColor;
             GUILayout.BeginHorizontal();
             GUILayout.Label("Min", GUILayout.Width(50));
@@ -232,9 +232,9 @@ namespace PlanetShine
 
             GUI.contentColor = new Color(0.8f, 1.0f, 0.8f);
             GUILayout.Label("Ground ambient fade altitude: " + config.minAmbientFadeAltitude + " to " + config.maxAmbientFadeAltitude);
-            GUILayout.Label("(from " + Math.Round(config.minAmbientFadeAltitude * planetShine.bodyRadius / 1000f) +
-                             "km to " + Math.Round(config.maxAmbientFadeAltitude * planetShine.bodyRadius / 1000f) +
-                             "km on " + planetShine.body.name + ")");
+            GUILayout.Label("(from " + Math.Round(config.minAmbientFadeAltitude * planetShine.bodySubRadius / 1000f) +
+                             "km to " + Math.Round(config.maxAmbientFadeAltitude * planetShine.bodySubRadius / 1000f) +
+                             "km on " + planetShine.body.celestialBody.name + ")");
             GUI.contentColor = originalTextColor;
             GUILayout.BeginHorizontal();
             GUILayout.Label("Min", GUILayout.Width(50));
@@ -261,44 +261,46 @@ namespace PlanetShine
         {
             GUILayout.BeginVertical();
 
-            if (planetShine.bodyRimTexture != null)
+            /*
+            if (planetShine.body.rimTexture != null)
             {
                 GUILayout.Label("Atmosphere shader rim color ramp:");
                 GUILayout.Space(48);
-                GUI.Box(new Rect(0, 64, 512, 16), planetShine.body.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp"));
+                GUI.Box(new Rect(0, 64, 512, 16), planetShine.celestialBody.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp"));
             }
+             * */
 
-            VariableDebugLabel("RAM used", config.ramUsage + " MB");
+            //VariableDebugLabel("RAM used", config.ramUsage + " MB");
 
-            GUI.contentColor = planetShine.bodyColor;
-            VariableDebugLabel("bodyColor", planetShine.bodyColor);
+            GUI.contentColor = planetShine.body.albedoColor;
+            VariableDebugLabel("albedoColor", planetShine.body.albedoColor);
             GUI.contentColor = originalTextColor;
 
-            GUI.contentColor = planetShine.bodyTextureColor;
-            VariableDebugLabel("bodyTextureColor", planetShine.bodyTextureColor);
+            GUI.contentColor = planetShine.body.terrainColor;
+            VariableDebugLabel("terrainColor", planetShine.body.terrainColor);
             GUI.contentColor = originalTextColor;
 
-            GUI.contentColor = planetShine.bodyAtmosphereColor;
-            VariableDebugLabel("bodyAtmosphereColor", planetShine.bodyAtmosphereColor);
+            GUI.contentColor = planetShine.body.atmosphereColor;
+            VariableDebugLabel("atmosphereColor", planetShine.body.atmosphereColor);
             GUI.contentColor = originalTextColor;
 
-            GUI.contentColor = planetShine.eveColor;
-            VariableDebugLabel("eveColor", planetShine.eveColor);
+            GUI.contentColor = planetShine.body.cloudsColor;
+            VariableDebugLabel("cloudsColor", planetShine.body.cloudsColor);
             GUI.contentColor = originalTextColor;
 
-            GUI.contentColor = planetShine.body.atmosphericAmbientColor;
-            VariableDebugLabel("atmosphericAmbientColor (stock)", planetShine.body.atmosphericAmbientColor);
+            GUI.contentColor = planetShine.body.celestialBody.atmosphericAmbientColor;
+            VariableDebugLabel("atmosphericAmbientColor (stock)", planetShine.body.celestialBody.atmosphericAmbientColor);
             GUI.contentColor = originalTextColor;
 
 
             VariableDebugLabel("MapView.MapIsEnabled", MapView.MapIsEnabled);
             VariableDebugLabel("performanceTimerLast", planetShine.performanceTimerLast);
-            VariableDebugLabel("body.name", planetShine.body.name);
+            VariableDebugLabel("body.name", planetShine.body.celestialBody.name);
 
-            VariableDebugLabel("bodyAtmosphereAmbient", planetShine.bodyAtmosphereAmbient);
-            VariableDebugLabel("bodyIntensity", planetShine.bodyIntensity);
-            VariableDebugLabel("eveCoverage", planetShine.eveCoverage);
-            VariableDebugLabel("bodyRadius", planetShine.bodyRadius);
+            VariableDebugLabel("atmosphereAmbientLevel", planetShine.body.atmosphereAmbientLevel);
+            VariableDebugLabel("albedoIntensity", planetShine.body.albedoIntensity);
+            VariableDebugLabel("cloudsScaledCoverage", planetShine.body.cloudsScaledCoverage);
+            VariableDebugLabel("bodyRadius", planetShine.bodySubRadius);
             VariableDebugLabel("bodyVesselDirection", planetShine.bodyVesselDirection);
             VariableDebugLabel("bodySunDirection", planetShine.bodySunDirection);
             VariableDebugLabel("vesselAltitude", planetShine.vesselAltitude);

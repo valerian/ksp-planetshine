@@ -54,6 +54,7 @@ namespace PlanetShine
 
         public bool blizzyToolbarInstalled = false;
         public bool kopernicusInstalled = false;
+        public bool eveInstalled = false;
 
         public static string[] qualityLabels = {"Low", "Medium", "High"};
         public static int maxAlbedoLightsQuantity = 4;
@@ -61,7 +62,7 @@ namespace PlanetShine
         public int quality { get; private set; }
         public bool useVertex = false;
         public int albedoLightsQuantity = 4;
-        public float baseAlbedoIntensity = 0.24f;
+        public float baseAlbedoIntensity = 0.22f;
         public float vacuumLightLevel = 0.03f;
         public float baseGroundAmbient = 0.60f;
         public float groundAmbientOverrideRatio = 0.60f;
@@ -106,7 +107,7 @@ namespace PlanetShine
     {
         private ConfigDefaults(){}
 
-        public static float baseAlbedoIntensity = 0.24f;
+        public static float baseAlbedoIntensity = 0.22f;
         public static float vacuumLightLevel = 0.03f;
         public static float baseGroundAmbient = 0.60f;
         public static float groundAmbientOverrideRatio = 0.60f;
@@ -140,6 +141,8 @@ namespace PlanetShine
                     config.blizzyToolbarInstalled = true;
                 if (assembly.name == "Kopernicus")
                     config.kopernicusInstalled = true;
+                if (assembly.name == "EVEManager")
+                    config.eveInstalled = true;
             }
         }
             

@@ -40,25 +40,9 @@ namespace PlanetShine
         public static LineRenderer[] debugLineLights = null;
 
         // information related to the currently orbiting body
-        public CelestialBody body;
-        public Color bodyColor;
-
-        public Color bodyTextureColor;
-        public Color bodyAtmosphereColor;
-
-        // TODO remove later, for debugging only
-        public Texture2D bodyRimTexture = null;
-
-        public float bodyAtmosphereAmbient;
-        public float bodyGroundAmbientOverride;
-        public float bodyIntensity;
-        public float bodyRadius;
-        public bool bodyIsSun = false;
-
-        public bool bodyTextureLoaded = false;
-
-        public float eveCoverage = 0;
-        public Color eveColor = new Color(0, 0, 0, 1);
+        public CelestialBodiesManager celestialBodiesManager = new CelestialBodiesManager();
+        public Body body;
+        public float bodySubRadius;
 
         // data for calculating and rendering albedo and ambient lights
         public Vector3 bodyVesselDirection;
@@ -92,7 +76,7 @@ namespace PlanetShine
             // Sepcial case for suns: we only want 1 albedo light to correctly handle the shadow.
             get
             {
-                return bodyIsSun ? 1 : config.albedoLightsQuantity;
+                return body.isSun ? 1 : config.albedoLightsQuantity;
             }
         }
 
@@ -154,194 +138,21 @@ namespace PlanetShine
         // Find current celestial body info and color in config, or use default neutral settings
         private void UpdateCelestialBody()
         {
-            //TODO seriously clean this big mess, it's a priority
-            //TODO try to find a temporary alternative color to unloaded textures
-            if (body == FlightGlobals.ActiveVessel.mainBody &&
-                (bodyTextureLoaded || Sun.Instance.sun == body || body.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0))
-                return;
-
-            Logger.Log("RAM usage at UpdateCelestialBody() start: " + Config.Instance.ramUsage + " MB");
-
-            bodyTextureLoaded = false;
-            body = FlightGlobals.ActiveVessel.mainBody;
-            bodyColor = new Color(100f/256f,100f/256f,100f/256f);
-            bodyTextureColor = new Color(100f / 256f, 100f / 256f, 100f / 256f);
-            bodyAtmosphereColor = new Color(100f / 256f, 100f / 256f, 100f / 256f);
-            bodyIntensity = 1f;
-            bodyGroundAmbientOverride = 1.0f;
-
-            /*GC.GetTotalMemory(true);
-            return;*/
-
-            if (bodyRimTexture != null)
-            {
-                Logger.Log("RAM usage before Texture2D.DestroyImmediate(bodyRimTexture): " + Config.Instance.ramUsage + " MB");
-                Texture2D.DestroyImmediate(bodyRimTexture);
-                Logger.Log("RAM usage after Texture2D.DestroyImmediate(bodyRimTexture): " + Config.Instance.ramUsage + " MB");
-                bodyRimTexture = null;
-            }
-
-            if (Sun.Instance.sun == body || body.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0)
-            {
-                //TODO extract color from shader and/or sunlight
-                bodyAtmosphereAmbient = 0.2f;
-                bodyIntensity = 6.0f;
-                bodyIsSun = true;
-            }
-            else
-            {
-                if (body.scaledBody.renderer.sharedMaterial.mainTexture == null)
-                {
-                    Logger.Log("No Scaled Space texture found, looking for Kopernicus ScaledSpaceDemand");
-                    var scaledSpaceDemand = body.scaledBody.GetComponent("ScaledSpaceDemand");
-                    if (scaledSpaceDemand == null)
-                    {
-                        Logger.Log("Kopernicus ScaledSpaceDemand not found");
-                        return;
-                    }
-                    scaledSpaceDemand.GetType().GetMethod("OnBecameVisible", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(scaledSpaceDemand, null);
-                    Logger.Log("Succesfully triggered Kopernicus ScaledSpaceDemand");
-                }
-
-                if (body.scaledBody.renderer.sharedMaterial.mainTexture == null)
-                {
-                    Logger.Log("Still no texture!");
-                    return;
-                }
-
-                bodyTextureLoaded = true;
-                Logger.Log("RAM usage before bodyTextureColor: " + Config.Instance.ramUsage + " MB");
-                bodyTextureColor = Utils.GetUnreadableTextureAverageColor((Texture2D)body.scaledBody.renderer.sharedMaterial.mainTexture);
-                Logger.Log("RAM usage after bodyTextureColor: " + Config.Instance.ramUsage + " MB");
-                bodyColor = bodyTextureColor;
-
-                if (body.atmosphere)
-                {
-                    bodyAtmosphereAmbient = 1.0f;
-
-                    // adding atmosphere shader color
-                    if (body.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp") != null)
-                    {
-                        bodyRimTexture = Utils.CreateReadable((Texture2D)body.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp"));
-                        bodyAtmosphereColor = Utils.GetRimOuterColor(bodyRimTexture, 0.2f);
-                        bodyColor = (bodyColor * 0.6f) + (bodyAtmosphereColor * 0.4f);
-                        bodyColor.a = 1.0f;
-                    }
-
-                    // trying to add eve clouds color
-
-                    UnityEngine.Object[] cloudsObjectList = null;
-
-                    Type cloudsObjectType = Utils.FindTypeContains("CloudsObject");
-                    Logger.Log("CloudsObject type: " + cloudsObjectType);
-                    if (cloudsObjectType != null)
-                    {
-                        cloudsObjectList = FindObjectsOfType(cloudsObjectType);
-                    }
-
-                    if (cloudsObjectList != null && cloudsObjectList.Length > 0)
-                    {
-
-                        List<Material> cloudMaterials = new List<Material>();
-                        Dictionary<Material, Texture2D> cloudReadableTextures = new Dictionary<Material, Texture2D>();
-                        Dictionary<Material, float> cloudCoverages = new Dictionary<Material, float>();
-
-                        foreach (var cloudObject in cloudsObjectList)
-                        {
-                            if ((string)cloudsObjectType.GetProperty("Body").GetValue(cloudObject, null) == body.name)
-                            {
-                                var allFields = cloudsObjectType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
-                                var layer2DField = cloudsObjectType.GetField("layer2D", BindingFlags.Instance | BindingFlags.NonPublic);
-                                var layer2D = layer2DField.GetValue(cloudObject);
-                                var CloudMaterialField = layer2D.GetType().GetField("CloudMaterial", BindingFlags.Instance | BindingFlags.NonPublic);
-                                Material CloudMaterial = (Material)CloudMaterialField.GetValue(layer2D);
-                                cloudMaterials.Add(CloudMaterial);
-                                cloudReadableTextures.Add(CloudMaterial, Utils.CreateReadable((Texture2D)CloudMaterial.mainTexture));
-                            }
-                        }
-
-                        eveCoverage = 0;
-                        eveColor = new Color(0, 0, 0, 1);
-                        float alphaSum = 0;
-                        foreach (var cloudReadableTexture in cloudReadableTextures)
-                            cloudCoverages.Add(cloudReadableTexture.Key, Utils.GetTextureAverageAlpha(cloudReadableTexture.Value));
-
-                        if (cloudMaterials.Count == 1)
-                            Logger.Log("EVE textures for " + body.name + ": only 1");
-                        else
-                            Logger.Log("EVE textures for " + body.name + ": multiple, does " + (Utils.DoTexturesMatch(cloudReadableTextures.Select(o => o.Value).ToArray()) ? "" : "not ") + "match");
-
-
-                        if (cloudMaterials.Count > 1 && Utils.DoTexturesMatch(cloudReadableTextures.Select(o => o.Value).ToArray()))
-                        {
-                            eveCoverage = Utils.GetTexturesCombinedAlpha(cloudReadableTextures.Select(o => o.Value).ToArray());
-                        }
-                        else
-                        {
-                            foreach (var coverage in cloudCoverages)
-                                if (coverage.Value > eveCoverage)
-                                    eveCoverage = coverage.Value;
-
-                            if (cloudMaterials.Count == 2)
-                                eveCoverage += (1.0f - eveCoverage) * 0.2f;
-                            else if (cloudMaterials.Count >= 3)
-                                eveCoverage += (1.0f - eveCoverage) * 0.4f;
-                        }
-
-
-                        foreach (var coverage in cloudCoverages)
-                        {
-                            Logger.Log("EVE texture color for " + body.name + ": " + coverage.Key.color);
-                            alphaSum += coverage.Value;
-                            eveColor.r += coverage.Key.color.r * coverage.Value;
-                            eveColor.g += coverage.Key.color.g * coverage.Value;
-                            eveColor.b += coverage.Key.color.b * coverage.Value;
-                        }
-
-                        eveColor.r /= alphaSum;
-                        eveColor.g /= alphaSum;
-                        eveColor.b /= alphaSum;
-
-                        bodyColor = bodyColor * (1.0f - eveCoverage) + eveColor * eveCoverage;
-
-                        foreach (var cloudReadableTexture in cloudReadableTextures)
-                        {
-                            Logger.Log("RAM usage before Texture2D.DestroyImmediate(cloudReadableTexture.Value): " + Config.Instance.ramUsage + " MB");
-                            Texture2D.DestroyImmediate(cloudReadableTexture.Value);
-                            Logger.Log("RAM usage after Texture2D.DestroyImmediate(cloudReadableTexture.Value): " + Config.Instance.ramUsage + " MB");
-                        }
-                    }
-
-                }
-                else
-                {
-                    bodyAtmosphereAmbient = 0.2f;
-                }
-                bodyIntensity = 1.0f;
-                bodyIsSun = false;
-            }
-
-            //TODO set on a per-attribute override
-            if (config.celestialBodyInfos.ContainsKey(body)) {
-                bodyColor = config.celestialBodyInfos[body].albedoColor;
-                bodyIntensity = config.celestialBodyInfos[body].albedoIntensity;
-                bodyAtmosphereAmbient = config.celestialBodyInfos[body].atmosphereAmbientLevel;
-                bodyGroundAmbientOverride = config.celestialBodyInfos[body].groundAmbientOverride;
-                bodyIsSun = config.celestialBodyInfos[body].isSun | bodyIsSun;
-            }
+            if (body == null || body.celestialBody != FlightGlobals.ActiveVessel.mainBody)
+                body = celestialBodiesManager.GetBody(FlightGlobals.ActiveVessel.mainBody);
         }
 
         private void UpdateDebugLines()
         {
             if (config.debug) {
-                debugLineLightDirection.SetPosition( 0, visibleLightPositionAverage );
-                debugLineLightDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
+                debugLineLightDirection.SetPosition(0, visibleLightPositionAverage );
+                debugLineLightDirection.SetPosition(1, FlightGlobals.ActiveVessel.transform.position );
 
                 debugLineSunDirection.SetPosition(0, Sun.Instance.sun.position);
-                debugLineSunDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
+                debugLineSunDirection.SetPosition(1, FlightGlobals.ActiveVessel.transform.position );
 
-                debugLineBodyDirection.SetPosition( 0, body.position );
-                debugLineBodyDirection.SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );
+                debugLineBodyDirection.SetPosition(0, body.celestialBody.position);
+                debugLineBodyDirection.SetPosition(1, FlightGlobals.ActiveVessel.transform.position );
 
             }
 
@@ -377,19 +188,19 @@ namespace PlanetShine
 
             // reminder: "body" means celestial body, which is the currently orbiting planet/moon/sun
             // to avoid number rounding issues, we shamelessly assume the body is 0.1% smaller
-            bodyRadius = (float) body.Radius * 0.999f;
+            bodySubRadius = (float) body.celestialBody.Radius * 0.999f;
             // direction from the center of the body to the current vessel
-            bodyVesselDirection = (FlightGlobals.ActiveVessel.transform.position - body.position).normalized;
+            bodyVesselDirection = (FlightGlobals.ActiveVessel.transform.position - body.celestialBody.position).normalized;
             // direction from the center of the body to the sun
-            bodySunDirection = bodyIsSun ?
+            bodySunDirection = body.isSun ?
                 bodyVesselDirection
-                : (Vector3)(Sun.Instance.sun.position - body.position).normalized;
+                : (Vector3)(Sun.Instance.sun.position - body.celestialBody.position).normalized;
             // distance between the current vessel and the center of the body
-            vesselBodyDistance = (float) (FlightGlobals.ActiveVessel.transform.position - body.position).magnitude;
+            vesselBodyDistance = (float)(FlightGlobals.ActiveVessel.transform.position - body.celestialBody.position).magnitude;
             // altitude of the vessel, based on the radius of the body
-            vesselAltitude = Math.Max(vesselBodyDistance - bodyRadius, 1.0f);
+            vesselAltitude = Math.Max(vesselBodyDistance - bodySubRadius, 1.0f);
             // visible surface of the body as seen from the vessel, in % of the hemisphere's radius
-            visibleSurface = vesselAltitude / (float) (FlightGlobals.ActiveVessel.transform.position - body.position).magnitude;
+            visibleSurface = vesselAltitude / (float)(FlightGlobals.ActiveVessel.transform.position - body.celestialBody.position).magnitude;
             // angle between the sun and the vessel, relative to the center of the body
             sunAngle = Vector3.Angle (bodySunDirection, bodyVesselDirection);
             // sunAngle value for which no more of the body's visible surface is enlightened by the sun
@@ -406,29 +217,29 @@ namespace PlanetShine
             // slighly increased version of visibleLightAngleEffect for a nicer rendering
             boostedVisibleLightAngleEffect = Mathf.Clamp01(visibleLightAngleEffect + 0.3f);
             // average direction from which the albedo light comes to the vessel, using most of the previous angular calculations
-            visibleLightPositionAverage = body.position + Vector3.RotateTowards(bodyVesselDirection, bodySunDirection,
-                                                                                visibleLightAngleAverage * 0.01745f, 0.0f) * bodyRadius;
+            visibleLightPositionAverage = body.celestialBody.position + Vector3.RotateTowards(bodyVesselDirection, bodySunDirection,
+                                                                                visibleLightAngleAverage * 0.01745f, 0.0f) * bodySubRadius;
             // albedo light intensity modificator caused by vessel altitude
-            atmosphereReflectionRatio = Mathf.Clamp01((vesselAltitude - (bodyRadius * config.minAlbedoFadeAltitude))
-                                                      / (bodyRadius * (config.maxAlbedoFadeAltitude
+            atmosphereReflectionRatio = Mathf.Clamp01((vesselAltitude - (bodySubRadius * config.minAlbedoFadeAltitude))
+                                                      / (bodySubRadius * (config.maxAlbedoFadeAltitude
                                                                        - config.minAlbedoFadeAltitude)));
             // albedo light intensity modificator caused by attenuation within atmosphere
-            atmosphereReflectionEffect = Mathf.Clamp01((1f - bodyAtmosphereAmbient) + atmosphereReflectionRatio);
+            atmosphereReflectionEffect = Mathf.Clamp01((1f - body.atmosphereAmbientLevel) + atmosphereReflectionRatio);
             // atmosphere ambient light intensity modificator based on altitude and atmosphere data
-            atmosphereAmbientRatio = 1f - Mathf.Clamp01((vesselAltitude - (bodyRadius * config.minAmbientFadeAltitude))
-                                                        / (bodyRadius * (config.maxAmbientFadeAltitude
+            atmosphereAmbientRatio = 1f - Mathf.Clamp01((vesselAltitude - (bodySubRadius * config.minAmbientFadeAltitude))
+                                                        / (bodySubRadius * (config.maxAmbientFadeAltitude
                                                                          - config.minAmbientFadeAltitude)));
             // atmosphere ambient light intensity modificator based on several combined settings
-            atmosphereAmbientEffect = bodyAtmosphereAmbient * config.baseGroundAmbient * atmosphereAmbientRatio;
+            atmosphereAmbientEffect = body.atmosphereAmbientLevel * config.baseGroundAmbient * atmosphereAmbientRatio;
             // approximation of the angle corresponding to the visible size of the enlightened aread of the body, relative to the vessel
-            areaSpreadAngle = Math.Min(60f, (visibleLightRatio * (1f - (sunAngle / 180f)))
+            areaSpreadAngle = Math.Min(45f, (visibleLightRatio * (1f - (sunAngle / 180f)))
                                        * Mathf.Rad2Deg * (float) Math.Acos(Math.Sqrt(Math.Max((vesselBodyDistance * vesselBodyDistance)
-                                                                                     - (bodyRadius * bodyRadius), 1.0f))
+                                                                                     - (bodySubRadius * bodySubRadius), 1.0f))
                                                                            / vesselBodyDistance));
-            // % of the area spread angle, from 0 degrees to 60 degrees
-            areaSpreadAngleRatio = Mathf.Clamp01(areaSpreadAngle / 60f);
+            // % of the area spread angle, from 0 degrees to 45 degrees
+            areaSpreadAngleRatio = Mathf.Clamp01(areaSpreadAngle / 45f);
             // max range of the albedo effect, based on the body radius and the settings
-            lightRange = bodyRadius * config.albedoRange;
+            lightRange = bodySubRadius * config.albedoRange;
             // albedo light intensity modificator caused by the distance from the body, and based on the max range
             vesselLightRangeRatio = (float) vesselAltitude / lightRange;
             // final modificator for albedo light intensity based on the distance form the body, with a scale adapted to computer screen's light rendering that lacks of dynamic range
@@ -439,16 +250,16 @@ namespace PlanetShine
             // combining all previous albedo light modificators to set the final intensity
             lightIntensity = config.baseAlbedoIntensity / albedoLightsQuantity;
             lightIntensity *= visibleLightRatio * boostedVisibleLightAngleEffect * atmosphereReflectionEffect
-                * lightDistanceEffect * bodyIntensity;
+                * lightDistanceEffect * body.albedoIntensity;
 
             // boosting light intensity when there are multiple rendering lights spread with a wide angle
-            // TODO check if it's still fine with the new 60 degree max (was 45 before)
+            // TODO find a formula for 60 degrees!
             if (albedoLightsQuantity > 1 )
                 lightIntensity *= 1f + (areaSpreadAngleRatio * areaSpreadAngleRatio * 0.5f);
             
             int i = 0;
             foreach (GameObject albedoLight in albedoLights){
-                if (config.useVertex && !bodyIsSun)
+                if (config.useVertex && !body.isSun)
                     albedoLight.light.renderMode = LightRenderMode.ForceVertex;
                 else
                     albedoLight.light.renderMode = LightRenderMode.ForcePixel;
@@ -465,7 +276,7 @@ namespace PlanetShine
                         * albedoLight.light.transform.forward;
                 }
                       
-                albedoLight.light.color = bodyColor;
+                albedoLight.light.color = body.albedoColor;
                 if (renderEnabled && (i < albedoLightsQuantity) && !MapView.MapIsEnabled) {
                     albedoLight.light.enabled = true;
                 } else
@@ -484,9 +295,9 @@ namespace PlanetShine
                     //TODO bring back ambient light mixed with vacuumColor, because ambient light only works on very low altitudes
                     //TODO find ambientlight fading curve
                     RenderSettings.ambientLight = RenderSettings.ambientLight *
-                        (1f - (config.groundAmbientOverrideRatio * bodyGroundAmbientOverride));
-                    RenderSettings.ambientLight += (atmosphereAmbientEffect * visibleLightAngleEffect * bodyColor) *
-                        (config.groundAmbientOverrideRatio * bodyGroundAmbientOverride);
+                        (1f - (config.groundAmbientOverrideRatio));
+                    RenderSettings.ambientLight += (atmosphereAmbientEffect * visibleLightAngleEffect * body.albedoColor) *
+                        (config.groundAmbientOverrideRatio);
                 }
             }
         }
