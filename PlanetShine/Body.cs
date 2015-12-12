@@ -237,8 +237,13 @@ namespace PlanetShine
                     {
                         var layer2DField = cloudsObjectType.GetField("layer2D", BindingFlags.Instance | BindingFlags.NonPublic);
                         var layer2D = layer2DField.GetValue(cloudObject);
-                        var CloudMaterialField = layer2D.GetType().GetField("CloudMaterial", BindingFlags.Instance | BindingFlags.NonPublic);
-                        cloudLayers.Add(new EveCloudLayer((Material)CloudMaterialField.GetValue(layer2D)));
+                        if (layer2D == null)
+                            continue;
+                        var cloudMaterialField = layer2D.GetType().GetField("CloudMaterial", BindingFlags.Instance | BindingFlags.NonPublic);
+                        Material cloudMaterial = (Material)cloudMaterialField.GetValue(layer2D);
+                        if (cloudMaterial == null)
+                            continue;
+                        cloudLayers.Add(new EveCloudLayer(cloudMaterial));
                     }
                 }
                 cloudsScaledCoverage = EveCloudLayer.DetermineCoverage(cloudLayers);
