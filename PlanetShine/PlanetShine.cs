@@ -39,6 +39,20 @@ namespace PlanetShine
 
         public static LineRenderer[] debugLineLights = null;
 
+        // EXPERIMENTAL CAMERA
+
+        public Texture2D bodyCameraTexture;
+        public RenderTexture bodyCameraRenderTexture;
+        public GameObject bodyCameraObject;
+        public Camera bodyCamera;
+
+        public Texture2D bodyCameraTexture2;
+        public RenderTexture bodyCameraRenderTexture2;
+        public GameObject bodyCameraObject2;
+        public Camera bodyCamera2;
+
+        public Texture2D viewTexture;
+
         // information related to the currently orbiting body
         public CelestialBodiesManager celestialBodiesManager = new CelestialBodiesManager();
         public Body body;
@@ -105,6 +119,7 @@ namespace PlanetShine
 
             CreateAlbedoLights();
             CreateDebugLines();
+            InitCamera();
         }
 
         private void CreateDebugLines()
@@ -315,8 +330,13 @@ namespace PlanetShine
             }
 
             UpdateCelestialBody();
-            UpdateAlbedoLights();
-            UpdateDebugLines();
+
+            //TODO check redundancy of renderEnabled
+            if (renderEnabled)
+            {
+                UpdateAlbedoLights();
+                UpdateDebugLines();
+            }
 
             if (config.debug) {
                 performanceTimer.Stop();
@@ -326,7 +346,109 @@ namespace PlanetShine
         
         public void LateUpdate()
         {
+            if (!renderEnabled)
+                return;
             UpdateAmbientLights();
+            if ((fixedUpdateCounter++ % config.updateFrequency) != 0)
+                return;
+            UpdateCamera();
+        }
+
+
+
+        public void InitCamera()
+        {
+            bodyCameraTexture = new Texture2D(128, 128, TextureFormat.ARGB32, false);
+            bodyCameraRenderTexture = new RenderTexture(128, 128, 24);
+            bodyCameraObject = new GameObject("PlanetShineCamera");
+            bodyCamera = bodyCameraObject.AddComponent<Camera>();
+            bodyCamera.targetTexture = bodyCameraRenderTexture;
+            bodyCamera.aspect = 1;
+            bodyCamera.fieldOfView = 120;
+            bodyCamera.clearFlags = CameraClearFlags.SolidColor;
+            bodyCamera.backgroundColor = Color.black;
+            bodyCamera.cullingMask = (1 << 10);
+            bodyCamera.nearClipPlane = 0.0001f;
+            bodyCamera.farClipPlane = 200000000f;
+            //bodyCamera.gameObject.AddComponent<InvertAlpha>();
+            bodyCamera.enabled = true;
+
+            bodyCameraTexture2 = new Texture2D(128, 128, TextureFormat.ARGB32, false);
+            bodyCameraRenderTexture2 = new RenderTexture(128, 128, 24);
+            bodyCameraObject2 = new GameObject("PlanetShineCamera2");
+            bodyCamera2 = bodyCameraObject2.AddComponent<Camera>();
+            bodyCamera2.targetTexture = bodyCameraRenderTexture2;
+            bodyCamera2.aspect = 1;
+            bodyCamera2.fieldOfView = 120;
+            bodyCamera2.clearFlags = CameraClearFlags.SolidColor;
+            bodyCamera2.backgroundColor = Color.black;
+            bodyCamera2.cullingMask = (1 << 15);
+            bodyCamera2.nearClipPlane = 0.0001f;
+            bodyCamera2.farClipPlane = 200000000f;
+            //bodyCamera2.gameObject.AddComponent<InvertAlpha>();
+            bodyCamera2.enabled = true;
+
+            viewTexture = new Texture2D(128, 128, TextureFormat.ARGB32, false);
+        }
+
+        public void UpdateCamera()
+        {
+            //Material[] materials = Resources.FindObjectsOfTypeAll<Material>();
+            bodyCameraObject.transform.position = ScaledSpace.LocalToScaledSpace(FlightGlobals.ActiveVessel.transform.position);
+            bodyCameraObject.transform.LookAt(ScaledSpace.LocalToScaledSpace(body.celestialBody.transform.position));
+            bodyCameraObject2.transform.position = FlightGlobals.ActiveVessel.transform.position;
+            bodyCameraObject2.transform.LookAt(body.celestialBody.transform.position);
+            StartCoroutine(RenderCamera());
+        }
+
+        public IEnumerator RenderCamera()
+        {
+            yield return new WaitForEndOfFrame();
+
+            //Vector3 flightCameraPosition = FlightCamera.fetch.transform.position;
+            //FlightCamera.fetch.transform.position = FlightGlobals.ActiveVessel.transform.position/* + ((FlightGlobals.ActiveVessel.transform.position - body.celestialBody.position).normalized * 1000000)*/;
+
+            RenderTexture currentRT = RenderTexture.active;
+
+            RenderTexture.active = bodyCameraRenderTexture;
+            bodyCamera.Render();
+            bodyCameraTexture.ReadPixels(new Rect(0, 0, 128, 128), 0, 0);
+            bodyCameraTexture.Apply(false, false);
+
+            RenderTexture.active = bodyCameraRenderTexture2;
+            bodyCamera2.Render();
+            bodyCameraTexture2.ReadPixels(new Rect(0, 0, 128, 128), 0, 0);
+            bodyCameraTexture2.Apply(false, false);
+
+            RenderTexture.active = currentRT;
+            //FlightCamera.fetch.transform.position = flightCameraPosition;
+
+            Color pixel = Color.white;
+
+            for (int i = 0; i < 128; i++)
+                for (int j = 0; j < 128; j++)
+                {
+                    pixel = Color.Lerp(bodyCameraTexture2.GetPixel(i, j), bodyCameraTexture.GetPixel(i, j), bodyCameraTexture2.GetPixel(i, j).a * 2f);
+                    pixel.a = 1f;
+                    viewTexture.SetPixel(i, j, pixel);
+                }
+            viewTexture.Apply();
+
+
+            /*
+             * Color pixel = Color.white;
+            Color[] pixels1 = bodyCameraTexture.GetPixels();
+            Color[] pixels2 = bodyCameraTexture2.GetPixels();
+            Color[] pixelsView = viewTexture.GetPixels();
+            for (int i = 0; i < (128 * 128); i++)
+                for (int j = 0; j < 128; j++)
+                {
+                    pixelsView[i] = Color.Lerp(pixels2[i], pixels1[i], pixels2[i].a);
+                    pixelsView[i].a = 1f;
+                }
+            viewTexture.SetPixels(pixelsView);
+            viewTexture.Apply();
+             * */
         }
     }
 }

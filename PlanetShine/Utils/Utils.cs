@@ -86,6 +86,47 @@ namespace PlanetShine
                     .SelectMany(a => a.GetTypes())
                     .FirstOrDefault(t => t.FullName.Contains(partialName));
         }
+
+        public static Camera GetCameraByName(string name)
+        {
+            for (int i = 0; i < Camera.allCamerasCount; ++i)
+            {
+                if (Camera.allCameras[i].name == name)
+                {
+                    return Camera.allCameras[i];
+                }
+            }
+            return null;
+        }
+
+        public static void CameraInvertAlpha()
+        {
+            var mat = new Material("Shader \"Hidden/Alpha\" {" +
+                    "SubShader {" +
+                    "    Pass {" +
+                    "        ZTest Always Cull Off ZWrite Off" +
+                    "        ColorMask A" +
+                    "        Color (1,1,1,1)" +
+                    "    }" +
+                    "}" +
+                    "}"
+                );
+            mat.shader.hideFlags = HideFlags.HideAndDontSave;
+            mat.hideFlags = HideFlags.HideAndDontSave;
+            GL.PushMatrix();
+            GL.LoadOrtho();
+            for (var i = 0; i < mat.passCount; ++i)
+            {
+                mat.SetPass(i);
+                GL.Begin(GL.QUADS);
+                GL.Vertex3(0f, 0f, 0.1f);
+                GL.Vertex3(1f, 0f, 0.1f);
+                GL.Vertex3(1f, 1f, 0.1f);
+                GL.Vertex3(0f, 1f, 0.1f);
+                GL.End();
+            }
+            GL.PopMatrix();
+        }
     }
 
 
@@ -101,6 +142,77 @@ namespace PlanetShine
         }
     }
 
+    public class InvertAlpha : MonoBehaviour
+    {       
+        public void OnPostRender() {
+            var mat = new Material ("Shader \"Hidden/Alpha\" {" +
+                    "SubShader {" +
+                    "    Pass {" +
+                    "        ZTest Always Cull Off ZWrite Off" +
+                    "        ColorMask A Blend Zero OneMinusDstAlpha" +
+                    "        Color (1,1,1,1)" +
+                    "    }" +
+                    "}" +
+                    "}"
+                );
+            mat.shader.hideFlags = HideFlags.HideAndDontSave;
+            mat.hideFlags = HideFlags.HideAndDontSave;
+            GL.PushMatrix();
+            GL.LoadOrtho();
+            for (var i = 0; i < mat.passCount; ++i) {
+                mat.SetPass (i);
+                GL.Begin (GL.QUADS);
+                GL.Vertex3 (0f, 0f, 0.1f);
+                GL.Vertex3 (1f, 0f, 0.1f);
+                GL.Vertex3 (1f, 1f, 0.1f);
+                GL.Vertex3 (0f, 1f, 0.1f);
+                GL.End ();
+            }
+            GL.PopMatrix ();
+        }
+    }
 
+    // A script that when attached to the camera, makes the resulting
+    // colors inverted. See its effect in play mode.
+    public class InvertColors : MonoBehaviour
+    {
+        private Material mat;
+
+        // Will be called from camera after regular rendering is done.
+        public void OnPostRender()
+        {
+            if (!mat)
+            {
+                // Unity has a built-in shader that is useful for drawing
+                // simple colored things. In this case, we just want to use
+                // a blend mode that inverts destination colors.			
+                var shader = Shader.Find("Hidden/Internal-Colored");
+                mat = new Material(shader);
+                mat.hideFlags = HideFlags.HideAndDontSave;
+                // Set blend mode to invert destination colors.
+                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusDstColor);
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                // Turn off backface culling, depth writes, depth test.
+                mat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+                mat.SetInt("_ZWrite", 0);
+                mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+            }
+
+            GL.PushMatrix();
+            GL.LoadOrtho();
+
+            // activate the first shader pass (in this case we know it is the only pass)
+            mat.SetPass(0);
+            // draw a quad over whole screen
+            GL.Begin(GL.QUADS);
+            GL.Vertex3(0, 0, 0);
+            GL.Vertex3(1, 0, 0);
+            GL.Vertex3(1, 1, 0);
+            GL.Vertex3(0, 1, 0);
+            GL.End();
+
+            GL.PopMatrix();
+        }
+    }
 }
 

@@ -22,6 +22,7 @@ namespace PlanetShine
         private static Rect debugWindowPosition = new Rect(Screen.width - 420, 60, 80, 80);
         private static GUIStyle windowStyle = null;
         private static GUIStyle tabStyle = null;
+        private static GUIStyle debugStyle = null;
         private Color originalBackgroundColor;
         private Color originalTextColor;
         private int debugWindowLabelWidth = 200;
@@ -34,6 +35,8 @@ namespace PlanetShine
             guiManager = manager;
             windowStyle = new GUIStyle(HighLogic.Skin.window);
             tabStyle = new GUIStyle(HighLogic.Skin.window);
+            debugStyle = new GUIStyle(HighLogic.Skin.window);
+            debugStyle.fontSize = (int) Math.Round(debugStyle.fontSize * 0.8);
             planetShine = PlanetShine.Instance;
         }
 
@@ -44,10 +47,11 @@ namespace PlanetShine
             if (config.debug && PlanetShine.Instance != null)
             {
                 debugWindowPosition = GUILayout.Window(143751301, debugWindowPosition,
-                                                        OnDebugWindow, "--- PLANETSHINE DEBUG ---", windowStyle);
+                                                        OnDebugWindow, "--- PLANETSHINE DEBUG ---", debugStyle);
             }
             if ((updateCounter % 100) == 0)
             {
+                //TODO only call when something have been changed
                 ConfigManager.Instance.SaveSettings();
             }
             updateCounter++;
@@ -255,20 +259,26 @@ namespace PlanetShine
             GUI.contentColor = new Color(1.0f, 0.7f, 0.6f);
             config.debug = GUILayout.Toggle(config.debug, "Debug mode");
             GUI.contentColor = originalTextColor;
+
+            if (!config.debug || PlanetShine.Instance == null)
+                return;
         }
 
         private void OnDebugWindow(int windowID)
         {
+            GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
 
-            /*
-            if (planetShine.body.rimTexture != null)
+            
+            if (planetShine.bodyCameraTexture != null)
             {
-                GUILayout.Label("Atmosphere shader rim color ramp:");
-                GUILayout.Space(48);
-                GUI.Box(new Rect(0, 64, 512, 16), planetShine.celestialBody.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp"));
+                GUILayout.Label("Body Camera Texture");
+                GUILayout.Space(128);
+                GUI.Box(new Rect(0, 48, 128, 128), planetShine.bodyCameraTexture);
+                GUI.Box(new Rect(128, 48, 128, 128), planetShine.bodyCameraTexture2);
+                GUI.Box(new Rect(256, 48, 128, 128), planetShine.viewTexture);
             }
-             * */
+            
 
             //VariableDebugLabel("RAM used", config.ramUsage + " MB");
 
@@ -292,6 +302,8 @@ namespace PlanetShine
             VariableDebugLabel("atmosphericAmbientColor (stock)", planetShine.body.celestialBody.atmosphericAmbientColor);
             GUI.contentColor = originalTextColor;
 
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical();
 
             VariableDebugLabel("MapView.MapIsEnabled", MapView.MapIsEnabled);
             VariableDebugLabel("performanceTimerLast", planetShine.performanceTimerLast);
@@ -328,11 +340,12 @@ namespace PlanetShine
             VariableDebugLabel("Gui.updateCounter", updateCounter);
 
             GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
 
             GUI.DragWindow();
 
-            debugWindowPosition.x = Mathf.Clamp(debugWindowPosition.x, 0f, Screen.width - debugWindowPosition.width);
-            debugWindowPosition.y = Mathf.Clamp(debugWindowPosition.y, 0f, Screen.height - debugWindowPosition.height);
+            //debugWindowPosition.x = Mathf.Clamp(debugWindowPosition.x, 0f, Screen.width - debugWindowPosition.width);
+            //debugWindowPosition.y = Mathf.Clamp(debugWindowPosition.y, 0f, Screen.height - debugWindowPosition.height);
         }
 
         private void QualityChoiceRow<T>(string label, ref T target, DisplaySettingOption<T>[] choices)
