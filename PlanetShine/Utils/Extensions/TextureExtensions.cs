@@ -72,6 +72,45 @@ namespace PlanetShine
             return new Color(r / total, g / total, b / total, a / total);  
         }
 
+        public static Color GetAverageColorSlow(this Texture2D texture)
+        {
+            return texture.GetAverageColorSlow(0, 0, texture.width, texture.height);
+        }
+
+        public static Color GetAverageColorSlow(this Texture2D texture, int x, int y, int width, int height)
+        {
+            if (x < 0 || y < 0 || x + width > texture.width || y + height > texture.height)
+                throw new Exception("Target rect out of texture bounds");
+            int total = width * height;
+            Color sumColors = new Color(0, 0, 0, 0);
+
+            for (int i = x; i < x + width; i++)
+                for (int j = y; j < y + height; j++)
+                    sumColors += texture.GetPixel(i, j);
+            return sumColors / total;
+        }
+
+        public static Color GetAverageColorCenterWeighted(this Texture2D texture, float centerWeight, float curvePower = 2)
+        {
+            float total = 0;
+            Color sumColors = new Color(0, 0, 0, 0);
+            Vector2 center = new Vector2(texture.width / 2, texture.height / 2);
+            Vector2 local = new Vector2();
+            float diagonalRadius = Mathf.Sqrt((texture.width * texture.width) + (texture.height * texture.height)) / 2;
+            float weight = 0;
+
+            for (int x = 0; x < texture.width; x++)
+                for (int y = 0; y < texture.height; y++)
+                {
+                    local.x = x;
+                    local.y = y;
+                    weight = Mathf.Pow(1f + ((1f - ((local - center).magnitude / diagonalRadius)) * (centerWeight - 1f)), curvePower);
+                    sumColors += texture.GetPixel(x, y) * weight;
+                    total += weight;
+                }
+            return sumColors / total;
+        }
+
         public static Color GetAverageColorPartial(this Texture2D texture, int x, int y, int blockWidth, int blockHeight)
         {
             Logger.DebugRam("Texture2D GetAverageColorPartial start");

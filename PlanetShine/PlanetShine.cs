@@ -52,6 +52,8 @@ namespace PlanetShine
         public Camera bodyCamera2;
 
         public Texture2D viewTexture;
+        public float viewTextureColorCenterWeight = 10;
+        public float viewTextureColorCenterCurvePower = 2;
 
         // information related to the currently orbiting body
         public CelestialBodiesManager celestialBodiesManager = new CelestialBodiesManager();
@@ -263,9 +265,13 @@ namespace PlanetShine
             visibleLightVesselDirection = (FlightGlobals.ActiveVessel.transform.position - visibleLightPositionAverage).normalized;
 
             // combining all previous albedo light modificators to set the final intensity
+            /*
             lightIntensity = config.baseAlbedoIntensity / albedoLightsQuantity;
             lightIntensity *= visibleLightRatio * boostedVisibleLightAngleEffect * atmosphereReflectionEffect
                 * lightDistanceEffect * body.albedoIntensity;
+             * */
+            lightIntensity = (config.baseAlbedoIntensity / albedoLightsQuantity) * body.albedoIntensity;
+
 
             // boosting light intensity when there are multiple rendering lights spread with a wide angle
             // TODO find a formula for 60 degrees!
@@ -349,8 +355,6 @@ namespace PlanetShine
             if (!renderEnabled)
                 return;
             UpdateAmbientLights();
-            if ((fixedUpdateCounter++ % config.updateFrequency) != 0)
-                return;
             UpdateCamera();
         }
 
@@ -398,12 +402,15 @@ namespace PlanetShine
             bodyCameraObject.transform.LookAt(ScaledSpace.LocalToScaledSpace(body.celestialBody.transform.position));
             bodyCameraObject2.transform.position = FlightGlobals.ActiveVessel.transform.position;
             bodyCameraObject2.transform.LookAt(body.celestialBody.transform.position);
-            StartCoroutine(RenderCamera());
+            //StartCoroutine(RenderCamera());
+            RenderCamera();
+            body.albedoColor = viewTexture.GetAverageColorCenterWeighted(viewTextureColorCenterWeight, viewTextureColorCenterCurvePower);
         }
 
-        public IEnumerator RenderCamera()
+        // IEnumerator RenderCamera()
+        void RenderCamera()
         {
-            yield return new WaitForEndOfFrame();
+            //yield return new WaitForEndOfFrame();
 
             //Vector3 flightCameraPosition = FlightCamera.fetch.transform.position;
             //FlightCamera.fetch.transform.position = FlightGlobals.ActiveVessel.transform.position/* + ((FlightGlobals.ActiveVessel.transform.position - body.celestialBody.position).normalized * 1000000)*/;
@@ -433,7 +440,6 @@ namespace PlanetShine
                     viewTexture.SetPixel(i, j, pixel);
                 }
             viewTexture.Apply();
-
 
             /*
              * Color pixel = Color.white;

@@ -262,6 +262,12 @@ namespace PlanetShine
 
             if (!config.debug || PlanetShine.Instance == null)
                 return;
+
+
+            GUILayout.Label("viewTextureColorCenterWeight: " + planetShine.viewTextureColorCenterWeight);
+            planetShine.viewTextureColorCenterWeight = (float)Math.Round(GUILayout.HorizontalSlider(planetShine.viewTextureColorCenterWeight, 1f, 50f), 0);
+            GUILayout.Label("viewTextureColorCenterCurvePower: " + planetShine.viewTextureColorCenterCurvePower);
+            planetShine.viewTextureColorCenterCurvePower = (float)Math.Round(GUILayout.HorizontalSlider(planetShine.viewTextureColorCenterCurvePower, 1f, 50f), 0);
         }
 
         private void OnDebugWindow(int windowID)

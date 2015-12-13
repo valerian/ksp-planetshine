@@ -21,7 +21,7 @@ namespace PlanetShine
 
         private bool hasClouds = false;
 
-        public Color albedoColor { get; private set; }
+        public Color albedoColor { get; set; }
         public Color terrainColor { get; private set; }
         public Color atmosphereColor { get; private set; }
         public Color cloudsColor { get; private set; }
