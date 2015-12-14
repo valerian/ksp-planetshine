@@ -39,21 +39,9 @@ namespace PlanetShine
 
         public static LineRenderer[] debugLineLights = null;
 
-        // EXPERIMENTAL CAMERA
-
-        public Texture2D bodyCameraTexture;
-        public RenderTexture bodyCameraRenderTexture;
-        public GameObject bodyCameraObject;
-        public Camera bodyCamera;
-
-        public Texture2D bodyCameraTexture2;
-        public RenderTexture bodyCameraRenderTexture2;
-        public GameObject bodyCameraObject2;
-        public Camera bodyCamera2;
-
-        public Texture2D viewTexture;
-        public float viewTextureColorCenterWeight = 10;
-        public float viewTextureColorCenterCurvePower = 2;
+        // Albedo renderer
+        public Albedo albedo;
+        public float bodyFov = 120f;
 
         // information related to the currently orbiting body
         public CelestialBodiesManager celestialBodiesManager = new CelestialBodiesManager();
@@ -98,6 +86,7 @@ namespace PlanetShine
 
         // loop counter used for performance optimizations
         public int fixedUpdateCounter = 0;
+        public int frameCounter = 0;
 
 
 
@@ -121,7 +110,8 @@ namespace PlanetShine
 
             CreateAlbedoLights();
             CreateDebugLines();
-            InitCamera();
+            albedo = new Albedo(64);
+            albedo.elevation = 10000f;
         }
 
         private void CreateDebugLines()
@@ -144,7 +134,7 @@ namespace PlanetShine
                 albedoLights[i] = new GameObject();
                 albedoLights[i].AddComponent<Light>();
                 albedoLights[i].light.type = LightType.Directional;
-                albedoLights[i].light.cullingMask = (1 << 0);
+                albedoLights[i].light.cullingMask = LayerMask.Default;
                 albedoLights[i].light.shadows = LightShadows.Soft;
                 albedoLights[i].light.shadowStrength = 1.0f;
                 albedoLights[i].light.shadowSoftness = 20.0f;
@@ -205,7 +195,7 @@ namespace PlanetShine
 
             // reminder: "body" means celestial body, which is the currently orbiting planet/moon/sun
             // to avoid number rounding issues, we shamelessly assume the body is 0.1% smaller
-            bodySubRadius = (float) body.celestialBody.Radius * 0.999f;
+            bodySubRadius = (float) body.celestialBody.Radius * 0.9999f;
             // direction from the center of the body to the current vessel
             bodyVesselDirection = (FlightGlobals.ActiveVessel.transform.position - body.celestialBody.position).normalized;
             // direction from the center of the body to the sun
@@ -229,32 +219,40 @@ namespace PlanetShine
                                                / (visibleLightSunAngleMax - visibleLightSunAngleMin)));
             // angle between the vessel and the average center of the visible surface light, relative to the body center
             visibleLightAngleAverage = ((90f * visibleSurface) * (1f - (visibleLightRatio * (1f - (sunAngle / 180f)))));
-            // approximation of the sun light intensity reduction caused by the sun angle to the body surface
-            visibleLightAngleEffect = Mathf.Clamp01(1f - ((sunAngle - visibleLightAngleAverage) / 90f));
-            // slighly increased version of visibleLightAngleEffect for a nicer rendering
-            boostedVisibleLightAngleEffect = Mathf.Clamp01(visibleLightAngleEffect + 0.3f);
             // average direction from which the albedo light comes to the vessel, using most of the previous angular calculations
             visibleLightPositionAverage = body.celestialBody.position + Vector3.RotateTowards(bodyVesselDirection, bodySunDirection,
                                                                                 visibleLightAngleAverage * 0.01745f, 0.0f) * bodySubRadius;
+            
+            
+
             // albedo light intensity modificator caused by vessel altitude
-            atmosphereReflectionRatio = Mathf.Clamp01((vesselAltitude - (bodySubRadius * config.minAlbedoFadeAltitude))
-                                                      / (bodySubRadius * (config.maxAlbedoFadeAltitude
+            atmosphereReflectionRatio = Mathf.Clamp01((vesselAltitude - (body.virtualAtmosphereDepth * config.minAlbedoFadeAltitude))
+                                                      / (body.virtualAtmosphereDepth * (config.maxAlbedoFadeAltitude
                                                                        - config.minAlbedoFadeAltitude)));
             // albedo light intensity modificator caused by attenuation within atmosphere
             atmosphereReflectionEffect = Mathf.Clamp01((1f - body.atmosphereAmbientLevel) + atmosphereReflectionRatio);
+            
+            
+            
             // atmosphere ambient light intensity modificator based on altitude and atmosphere data
-            atmosphereAmbientRatio = 1f - Mathf.Clamp01((vesselAltitude - (bodySubRadius * config.minAmbientFadeAltitude))
-                                                        / (bodySubRadius * (config.maxAmbientFadeAltitude
+            atmosphereAmbientRatio = 1f - Mathf.Clamp01((vesselAltitude - (body.virtualAtmosphereDepth * config.minAmbientFadeAltitude))
+                                                        / (body.virtualAtmosphereDepth * (config.maxAmbientFadeAltitude
                                                                          - config.minAmbientFadeAltitude)));
             // atmosphere ambient light intensity modificator based on several combined settings
             atmosphereAmbientEffect = body.atmosphereAmbientLevel * config.baseGroundAmbient * atmosphereAmbientRatio;
+
+
+
             // approximation of the angle corresponding to the visible size of the enlightened aread of the body, relative to the vessel
-            areaSpreadAngle = Math.Min(45f, (visibleLightRatio * (1f - (sunAngle / 180f)))
-                                       * Mathf.Rad2Deg * (float) Math.Acos(Math.Sqrt(Math.Max((vesselBodyDistance * vesselBodyDistance)
-                                                                                     - (bodySubRadius * bodySubRadius), 1.0f))
-                                                                           / vesselBodyDistance));
+            bodyFov = 2 * Mathf.Rad2Deg * (float)Math.Acos(Math.Sqrt(Math.Max((vesselBodyDistance * vesselBodyDistance)
+                                                                         - (bodySubRadius * bodySubRadius), 1.0f))
+                                                               / vesselBodyDistance);
+            areaSpreadAngle = Math.Min(45f, (visibleLightRatio * (1f - (sunAngle / 180f))) * bodyFov / 2);
+
             // % of the area spread angle, from 0 degrees to 45 degrees
             areaSpreadAngleRatio = Mathf.Clamp01(areaSpreadAngle / 45f);
+
+
             // max range of the albedo effect, based on the body radius and the settings
             lightRange = bodySubRadius * config.albedoRange;
             // albedo light intensity modificator caused by the distance from the body, and based on the max range
@@ -270,8 +268,9 @@ namespace PlanetShine
             lightIntensity *= visibleLightRatio * boostedVisibleLightAngleEffect * atmosphereReflectionEffect
                 * lightDistanceEffect * body.albedoIntensity;
              * */
-            lightIntensity = (config.baseAlbedoIntensity / albedoLightsQuantity) * body.albedoIntensity;
+            //lightIntensity = (config.baseAlbedoIntensity / albedoLightsQuantity) * body.albedoIntensity;
 
+            lightIntensity = (config.baseAlbedoIntensity / albedoLightsQuantity) * atmosphereReflectionEffect * lightDistanceEffect * body.albedoIntensity;
 
             // boosting light intensity when there are multiple rendering lights spread with a wide angle
             // TODO find a formula for 60 degrees!
@@ -286,6 +285,7 @@ namespace PlanetShine
                     albedoLight.light.renderMode = LightRenderMode.ForcePixel;
                 albedoLight.light.intensity = lightIntensity;
                 albedoLight.light.transform.forward = visibleLightVesselDirection;
+                // TODO: use ViewportToWorldPoint for consistent light directions
                 // Spread the lights, but only if there are more than one
                 if (albedoLightsQuantity > 1 ) { 
                     albedoLight.light.transform.forward = Quaternion.AngleAxis (areaSpreadAngle,
@@ -317,7 +317,7 @@ namespace PlanetShine
                     //TODO find ambientlight fading curve
                     RenderSettings.ambientLight = RenderSettings.ambientLight *
                         (1f - (config.groundAmbientOverrideRatio));
-                    RenderSettings.ambientLight += (atmosphereAmbientEffect * visibleLightAngleEffect * body.albedoColor) *
+                    RenderSettings.ambientLight += (atmosphereAmbientEffect * body.albedoColor) *
                         (config.groundAmbientOverrideRatio);
                 }
             }
@@ -337,12 +337,8 @@ namespace PlanetShine
 
             UpdateCelestialBody();
 
-            //TODO check redundancy of renderEnabled
-            if (renderEnabled)
-            {
-                UpdateAlbedoLights();
-                UpdateDebugLines();
-            }
+            UpdateAlbedoLights();
+            UpdateDebugLines();
 
             if (config.debug) {
                 performanceTimer.Stop();
@@ -352,109 +348,20 @@ namespace PlanetShine
         
         public void LateUpdate()
         {
+            if (FlightGlobals.ActiveVessel == null)
+                return;
+            
+            UpdateAmbientLights();
+
+            if ((frameCounter++ % 3) != 0)
+                return;
             if (!renderEnabled)
                 return;
-            UpdateAmbientLights();
-            UpdateCamera();
-        }
-
-
-
-        public void InitCamera()
-        {
-            bodyCameraTexture = new Texture2D(128, 128, TextureFormat.ARGB32, false);
-            bodyCameraRenderTexture = new RenderTexture(128, 128, 24);
-            bodyCameraObject = new GameObject("PlanetShineCamera");
-            bodyCamera = bodyCameraObject.AddComponent<Camera>();
-            bodyCamera.targetTexture = bodyCameraRenderTexture;
-            bodyCamera.aspect = 1;
-            bodyCamera.fieldOfView = 120;
-            bodyCamera.clearFlags = CameraClearFlags.SolidColor;
-            bodyCamera.backgroundColor = Color.black;
-            bodyCamera.cullingMask = (1 << 10);
-            bodyCamera.nearClipPlane = 0.0001f;
-            bodyCamera.farClipPlane = 200000000f;
-            //bodyCamera.gameObject.AddComponent<InvertAlpha>();
-            bodyCamera.enabled = true;
-
-            bodyCameraTexture2 = new Texture2D(128, 128, TextureFormat.ARGB32, false);
-            bodyCameraRenderTexture2 = new RenderTexture(128, 128, 24);
-            bodyCameraObject2 = new GameObject("PlanetShineCamera2");
-            bodyCamera2 = bodyCameraObject2.AddComponent<Camera>();
-            bodyCamera2.targetTexture = bodyCameraRenderTexture2;
-            bodyCamera2.aspect = 1;
-            bodyCamera2.fieldOfView = 120;
-            bodyCamera2.clearFlags = CameraClearFlags.SolidColor;
-            bodyCamera2.backgroundColor = Color.black;
-            bodyCamera2.cullingMask = (1 << 15);
-            bodyCamera2.nearClipPlane = 0.0001f;
-            bodyCamera2.farClipPlane = 200000000f;
-            //bodyCamera2.gameObject.AddComponent<InvertAlpha>();
-            bodyCamera2.enabled = true;
-
-            viewTexture = new Texture2D(128, 128, TextureFormat.ARGB32, false);
-        }
-
-        public void UpdateCamera()
-        {
-            //Material[] materials = Resources.FindObjectsOfTypeAll<Material>();
-            bodyCameraObject.transform.position = ScaledSpace.LocalToScaledSpace(FlightGlobals.ActiveVessel.transform.position);
-            bodyCameraObject.transform.LookAt(ScaledSpace.LocalToScaledSpace(body.celestialBody.transform.position));
-            bodyCameraObject2.transform.position = FlightGlobals.ActiveVessel.transform.position;
-            bodyCameraObject2.transform.LookAt(body.celestialBody.transform.position);
-            //StartCoroutine(RenderCamera());
-            RenderCamera();
-            body.albedoColor = viewTexture.GetAverageColorCenterWeighted(viewTextureColorCenterWeight, viewTextureColorCenterCurvePower);
-        }
-
-        // IEnumerator RenderCamera()
-        void RenderCamera()
-        {
-            //yield return new WaitForEndOfFrame();
-
-            //Vector3 flightCameraPosition = FlightCamera.fetch.transform.position;
-            //FlightCamera.fetch.transform.position = FlightGlobals.ActiveVessel.transform.position/* + ((FlightGlobals.ActiveVessel.transform.position - body.celestialBody.position).normalized * 1000000)*/;
-
-            RenderTexture currentRT = RenderTexture.active;
-
-            RenderTexture.active = bodyCameraRenderTexture;
-            bodyCamera.Render();
-            bodyCameraTexture.ReadPixels(new Rect(0, 0, 128, 128), 0, 0);
-            bodyCameraTexture.Apply(false, false);
-
-            RenderTexture.active = bodyCameraRenderTexture2;
-            bodyCamera2.Render();
-            bodyCameraTexture2.ReadPixels(new Rect(0, 0, 128, 128), 0, 0);
-            bodyCameraTexture2.Apply(false, false);
-
-            RenderTexture.active = currentRT;
-            //FlightCamera.fetch.transform.position = flightCameraPosition;
-
-            Color pixel = Color.white;
-
-            for (int i = 0; i < 128; i++)
-                for (int j = 0; j < 128; j++)
-                {
-                    pixel = Color.Lerp(bodyCameraTexture2.GetPixel(i, j), bodyCameraTexture.GetPixel(i, j), bodyCameraTexture2.GetPixel(i, j).a * 2f);
-                    pixel.a = 1f;
-                    viewTexture.SetPixel(i, j, pixel);
-                }
-            viewTexture.Apply();
-
-            /*
-             * Color pixel = Color.white;
-            Color[] pixels1 = bodyCameraTexture.GetPixels();
-            Color[] pixels2 = bodyCameraTexture2.GetPixels();
-            Color[] pixelsView = viewTexture.GetPixels();
-            for (int i = 0; i < (128 * 128); i++)
-                for (int j = 0; j < 128; j++)
-                {
-                    pixelsView[i] = Color.Lerp(pixels2[i], pixels1[i], pixels2[i].a);
-                    pixelsView[i].a = 1f;
-                }
-            viewTexture.SetPixels(pixelsView);
-            viewTexture.Apply();
-             * */
+            albedo.Activate(body.celestialBody);
+            albedo.Update();
+            albedo.Render();
+            albedo.Combine();
+            body.albedoColor = albedo.ExtractColor();
         }
     }
 }

@@ -43,7 +43,7 @@ namespace PlanetShine
         public bool Render(PlanetShine planetShine)
         {
             configWindowPosition = GUILayout.Window(143751300, configWindowPosition,
-                                         OnConfigWindow, "PlanetShine 0.5.0 - Beta", windowStyle);
+                                         OnConfigWindow, "PlanetShine 0.5.0 - EXPERIMENTAL", windowStyle);
             if (config.debug && PlanetShine.Instance != null)
             {
                 debugWindowPosition = GUILayout.Window(143751301, debugWindowPosition,
@@ -176,7 +176,7 @@ namespace PlanetShine
 
             GUILayout.Label("Ground and atmosphere ambient light intensity: " + config.baseGroundAmbient);
             GUILayout.BeginHorizontal();
-            config.baseGroundAmbient = (float)Math.Round(GUILayout.HorizontalSlider(config.baseGroundAmbient, 0.0f, 2.00f), 1);
+            config.baseGroundAmbient = (float)Math.Round(GUILayout.HorizontalSlider(config.baseGroundAmbient, 0.0f, 1.00f), 2);
             ResetButton(ref config.baseGroundAmbient, ConfigDefaults.baseGroundAmbient);
             GUILayout.EndHorizontal();
 
@@ -215,8 +215,8 @@ namespace PlanetShine
 
             GUI.contentColor = new Color(0.8f, 1.0f, 0.8f);
             GUILayout.Label("Planetshine fade altitude: " + config.minAlbedoFadeAltitude + " to " + config.maxAlbedoFadeAltitude);
-            GUILayout.Label("(from " + Math.Round(config.minAlbedoFadeAltitude * planetShine.bodySubRadius / 1000f) +
-                             "km to " + Math.Round(config.maxAlbedoFadeAltitude * planetShine.bodySubRadius / 1000f) +
+            GUILayout.Label("(from " + Math.Round(config.minAlbedoFadeAltitude * planetShine.body.virtualAtmosphereDepth / 1000f) +
+                             "km to " + Math.Round(config.maxAlbedoFadeAltitude * planetShine.body.virtualAtmosphereDepth / 1000f) +
                              "km on " + planetShine.body.celestialBody.name + ")");
             GUI.contentColor = originalTextColor;
             GUILayout.BeginHorizontal();
@@ -228,7 +228,7 @@ namespace PlanetShine
             GUILayout.BeginHorizontal();
             GUILayout.Label("Max", GUILayout.Width(50));
             config.maxAlbedoFadeAltitude = (float)Math.Round(GUILayout.HorizontalSlider(config.maxAlbedoFadeAltitude,
-                                                                                         config.minAlbedoFadeAltitude, 0.10f), 2);
+                                                                                         config.minAlbedoFadeAltitude, 1.00f), 2);
             ResetButton(ref config.maxAlbedoFadeAltitude, ConfigDefaults.maxAlbedoFadeAltitude);
             GUILayout.EndHorizontal();
 
@@ -236,8 +236,8 @@ namespace PlanetShine
 
             GUI.contentColor = new Color(0.8f, 1.0f, 0.8f);
             GUILayout.Label("Ground ambient fade altitude: " + config.minAmbientFadeAltitude + " to " + config.maxAmbientFadeAltitude);
-            GUILayout.Label("(from " + Math.Round(config.minAmbientFadeAltitude * planetShine.bodySubRadius / 1000f) +
-                             "km to " + Math.Round(config.maxAmbientFadeAltitude * planetShine.bodySubRadius / 1000f) +
+            GUILayout.Label("(from " + Math.Round(config.minAmbientFadeAltitude * planetShine.body.virtualAtmosphereDepth / 1000f) +
+                             "km to " + Math.Round(config.maxAmbientFadeAltitude * planetShine.body.virtualAtmosphereDepth / 1000f) +
                              "km on " + planetShine.body.celestialBody.name + ")");
             GUI.contentColor = originalTextColor;
             GUILayout.BeginHorizontal();
@@ -249,7 +249,7 @@ namespace PlanetShine
             GUILayout.BeginHorizontal();
             GUILayout.Label("Max", GUILayout.Width(50));
             config.maxAmbientFadeAltitude = (float)Math.Round(GUILayout.HorizontalSlider(config.maxAmbientFadeAltitude,
-                                                                                         config.minAmbientFadeAltitude, 0.10f), 2);
+                                                                                         config.minAmbientFadeAltitude, 1.00f), 2);
             ResetButton(ref config.maxAmbientFadeAltitude, ConfigDefaults.maxAmbientFadeAltitude);
             GUILayout.EndHorizontal();
 
@@ -263,26 +263,21 @@ namespace PlanetShine
             if (!config.debug || PlanetShine.Instance == null)
                 return;
 
-
-            GUILayout.Label("viewTextureColorCenterWeight: " + planetShine.viewTextureColorCenterWeight);
-            planetShine.viewTextureColorCenterWeight = (float)Math.Round(GUILayout.HorizontalSlider(planetShine.viewTextureColorCenterWeight, 1f, 50f), 0);
-            GUILayout.Label("viewTextureColorCenterCurvePower: " + planetShine.viewTextureColorCenterCurvePower);
-            planetShine.viewTextureColorCenterCurvePower = (float)Math.Round(GUILayout.HorizontalSlider(planetShine.viewTextureColorCenterCurvePower, 1f, 50f), 0);
         }
 
         private void OnDebugWindow(int windowID)
         {
-            GUILayout.BeginHorizontal();
+            //GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
 
             
-            if (planetShine.bodyCameraTexture != null)
+            if (planetShine.albedo != null && planetShine.albedo.active)
             {
-                GUILayout.Label("Body Camera Texture");
-                GUILayout.Space(128);
-                GUI.Box(new Rect(0, 48, 128, 128), planetShine.bodyCameraTexture);
-                GUI.Box(new Rect(128, 48, 128, 128), planetShine.bodyCameraTexture2);
-                GUI.Box(new Rect(256, 48, 128, 128), planetShine.viewTexture);
+                GUILayout.Label("Camera Textures: scaled - local - combined");
+                GUILayout.Space(64);
+                GUI.Box(new Rect(0, 48, 64, 64), planetShine.albedo.scaledCamera.texture);
+                GUI.Box(new Rect(64, 48, 64, 64), planetShine.albedo.localCamera.texture);
+                GUI.Box(new Rect(128, 48, 64, 64), planetShine.albedo.combinedTexture);
             }
             
 
@@ -292,24 +287,12 @@ namespace PlanetShine
             VariableDebugLabel("albedoColor", planetShine.body.albedoColor);
             GUI.contentColor = originalTextColor;
 
-            GUI.contentColor = planetShine.body.terrainColor;
-            VariableDebugLabel("terrainColor", planetShine.body.terrainColor);
-            GUI.contentColor = originalTextColor;
-
-            GUI.contentColor = planetShine.body.atmosphereColor;
-            VariableDebugLabel("atmosphereColor", planetShine.body.atmosphereColor);
-            GUI.contentColor = originalTextColor;
-
-            GUI.contentColor = planetShine.body.cloudsColor;
-            VariableDebugLabel("cloudsColor", planetShine.body.cloudsColor);
-            GUI.contentColor = originalTextColor;
-
             GUI.contentColor = planetShine.body.celestialBody.atmosphericAmbientColor;
             VariableDebugLabel("atmosphericAmbientColor (stock)", planetShine.body.celestialBody.atmosphericAmbientColor);
             GUI.contentColor = originalTextColor;
 
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical();
+            //GUILayout.EndVertical();
+            //GUILayout.BeginVertical();
 
             VariableDebugLabel("MapView.MapIsEnabled", MapView.MapIsEnabled);
             VariableDebugLabel("performanceTimerLast", planetShine.performanceTimerLast);
@@ -317,7 +300,6 @@ namespace PlanetShine
 
             VariableDebugLabel("atmosphereAmbientLevel", planetShine.body.atmosphereAmbientLevel);
             VariableDebugLabel("albedoIntensity", planetShine.body.albedoIntensity);
-            VariableDebugLabel("cloudsScaledCoverage", planetShine.body.cloudsScaledCoverage);
             VariableDebugLabel("bodyRadius", planetShine.bodySubRadius);
             VariableDebugLabel("bodyVesselDirection", planetShine.bodyVesselDirection);
             VariableDebugLabel("bodySunDirection", planetShine.bodySunDirection);
@@ -346,7 +328,7 @@ namespace PlanetShine
             VariableDebugLabel("Gui.updateCounter", updateCounter);
 
             GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
+            //GUILayout.EndHorizontal();
 
             GUI.DragWindow();
 

@@ -19,7 +19,6 @@ namespace PlanetShine
 {
     public class Utils
     {
-
         public static float TryParse(string s, float target)
         {
             float.TryParse(s, out target);
