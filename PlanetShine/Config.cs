@@ -65,7 +65,7 @@ namespace PlanetShine
         public float baseAlbedoIntensity = 0.24f;
         public float vacuumLightLevel = 0.03f;
         public float baseGroundAmbient = 0.40f;
-        public float groundAmbientOverrideRatio = 0.50f;
+        public float groundAmbientOverrideRatio = 0.60f;
         public float minAlbedoFadeAltitude = 0.00f;
         public float maxAlbedoFadeAltitude = 0.65f;
         public float minAmbientFadeAltitude = 0.10f;
@@ -110,7 +110,7 @@ namespace PlanetShine
         public static float baseAlbedoIntensity = 0.24f;
         public static float vacuumLightLevel = 0.03f;
         public static float baseGroundAmbient = 0.40f;
-        public static float groundAmbientOverrideRatio = 0.50f;
+        public static float groundAmbientOverrideRatio = 0.60f;
         public static float minAlbedoFadeAltitude = 0.00f;
         public static float maxAlbedoFadeAltitude = 0.65f;
         public static float minAmbientFadeAltitude = 0.10f;
