@@ -49,13 +49,16 @@ namespace PlanetShine
         {
             if (!active)
                 return false;
+
             position = FlightGlobals.ActiveVessel.transform.position;
             position += (position - targetBody.transform.position).normalized * elevation;
             float distance = (float) (position - targetBody.position).magnitude;
             fov = 2 * Mathf.Rad2Deg * Mathf.Acos(Mathf.Sqrt(Mathf.Max((distance * distance) - (float)(targetBody.Radius * targetBody.Radius), 1)) / distance);
-            localCamera.Update(position);
-            scaledCamera.Update(position);
-            
+            float nearClipPlane = Mathf.Max(0.001f, distance - ((float)targetBody.Radius - (float)targetBody.atmosphereDepth) * 1.2f);
+            float farClipPlane = distance + ((float)targetBody.Radius);
+
+            localCamera.Update(position, nearClipPlane, farClipPlane);
+            scaledCamera.Update(position, nearClipPlane, farClipPlane);
             localCamera.camera.fieldOfView = fov;
             scaledCamera.camera.fieldOfView = fov;
             return true;

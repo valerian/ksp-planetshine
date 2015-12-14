@@ -59,7 +59,7 @@ namespace PlanetShine
             active = false;
         }
 
-        public bool Update(Vector3 position)
+        public bool Update(Vector3 position, float nearClipPlane = 0.0001f, float farClipPlane = 200000000f)
         {
             if (!active)
                 return false;
@@ -67,11 +67,15 @@ namespace PlanetShine
             {
                 cameraObject.transform.position = ScaledSpace.LocalToScaledSpace(position);
                 cameraObject.transform.LookAt(ScaledSpace.LocalToScaledSpace(targetBody.transform.position));
+                camera.nearClipPlane = ScaledSpace.InverseScaleFactor * nearClipPlane;
+                camera.farClipPlane = ScaledSpace.InverseScaleFactor * farClipPlane;
             }
             else
             {
                 cameraObject.transform.position = position;
                 cameraObject.transform.LookAt(targetBody.transform.position);
+                camera.nearClipPlane = nearClipPlane;
+                camera.farClipPlane = farClipPlane;
             }
             return true;
         }
