@@ -10,7 +10,6 @@ namespace PlanetShine
     {
         public static Texture2D CreateReadable(this Texture2D original)
         {
-            //TODO check if there is a compressed format I can use
             Logger.DebugRam("Texture2D CreateReadable start");
             Logger.Debug("MipMaps: " + original.mipmapCount);
 

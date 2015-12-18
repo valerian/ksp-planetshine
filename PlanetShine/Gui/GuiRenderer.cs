@@ -160,7 +160,7 @@ namespace PlanetShine
         {
             GUILayout.Label("Planetshine light intensity: " + config.baseAlbedoIntensity);
             GUILayout.BeginHorizontal();
-            config.baseAlbedoIntensity = (float)Math.Round(GUILayout.HorizontalSlider(config.baseAlbedoIntensity, 0.0f, 0.50f), 2);
+            config.baseAlbedoIntensity = (float)Math.Round(GUILayout.HorizontalSlider(config.baseAlbedoIntensity, 0.0f, 5.00f), 2);
             ResetButton(ref config.baseAlbedoIntensity, ConfigDefaults.baseAlbedoIntensity);
             GUILayout.EndHorizontal();
 
@@ -190,12 +190,22 @@ namespace PlanetShine
 
             GUILayout.Space(20);
 
-            GUILayout.Label("Planetshine maximum range: " + config.albedoRange);
-            GUILayout.Label("(approximately " + Math.Round(config.albedoRange * planetShine.bodySubRadius / 2000f) +
-                             "km from " + planetShine.body.celestialBody.name + ")");
+            GUILayout.Label("Planetshine near curve strength: " + config.nearCurveStrength);
             GUILayout.BeginHorizontal();
-            config.albedoRange = (float)Math.Round(GUILayout.HorizontalSlider(config.albedoRange, 0.0f, 20f), 1);
-            ResetButton(ref config.albedoRange, ConfigDefaults.albedoRange);
+            config.nearCurveStrength = (float)Math.Round(GUILayout.HorizontalSlider(config.nearCurveStrength, 0.0f, 2f), 1);
+            ResetButton(ref config.nearCurveStrength, ConfigDefaults.nearCurveStrength);
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label("Planetshine far curve strength: " + config.farCurveStrength);
+            GUILayout.BeginHorizontal();
+            config.farCurveStrength = (float)Math.Round(GUILayout.HorizontalSlider(config.farCurveStrength, 0.0f, 500f), 0);
+            ResetButton(ref config.farCurveStrength, ConfigDefaults.farCurveStrength);
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label("Planetshine near/far curves mixing ratio: " + config.curvesMixRatio * 100 + "%");
+            GUILayout.BeginHorizontal();
+            config.curvesMixRatio = (float)Math.Round(GUILayout.HorizontalSlider(config.curvesMixRatio, 0.0f, 1.0f), 1);
+            ResetButton(ref config.curvesMixRatio, ConfigDefaults.curvesMixRatio);
             GUILayout.EndHorizontal();
         }
 
@@ -319,8 +329,6 @@ namespace PlanetShine
             VariableDebugLabel("atmosphereAmbientEffect", planetShine.atmosphereAmbientEffect);
             VariableDebugLabel("areaSpreadAngle", planetShine.areaSpreadAngle);
             VariableDebugLabel("areaSpreadAngleRatio", planetShine.areaSpreadAngleRatio);
-            VariableDebugLabel("lightRange", planetShine.lightRange);
-            VariableDebugLabel("vesselLightRangeRatio", planetShine.vesselLightRangeRatio);
             VariableDebugLabel("lightDistanceEffect", planetShine.lightDistanceEffect);
             VariableDebugLabel("visibleLightVesselDirection", planetShine.visibleLightVesselDirection);
             VariableDebugLabel("lightIntensity", planetShine.lightIntensity);

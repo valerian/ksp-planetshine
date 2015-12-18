@@ -68,8 +68,6 @@ namespace PlanetShine
         public float atmosphereAmbientEffect;
         public float areaSpreadAngle;
         public float areaSpreadAngleRatio;
-        public float lightRange;
-        public float vesselLightRangeRatio;
         public float lightDistanceEffect;
         public Vector3 visibleLightVesselDirection;
         public float lightIntensity;
@@ -190,7 +188,6 @@ namespace PlanetShine
         // thise is where all the calculation and rendering of albedo lights occur
         private void UpdateAlbedoLights()
         {
-            // TODO use ACTUAL atmosphere height! Maybe use atmosphere gradient as well
             // TODO try to simplify
 
             // reminder: "body" means celestial body, which is the currently orbiting planet/moon/sun
@@ -254,11 +251,29 @@ namespace PlanetShine
 
 
             // max range of the albedo effect, based on the body radius and the settings
-            lightRange = bodySubRadius * config.albedoRange;
+            //lightRange = bodySubRadius * config.albedoRange;
             // albedo light intensity modificator caused by the distance from the body, and based on the max range
-            vesselLightRangeRatio = (float) vesselAltitude / lightRange;
+            //vesselLightRangeRatio = (float) vesselAltitude / lightRange;
             // final modificator for albedo light intensity based on the distance form the body, with a scale adapted to computer screen's light rendering that lacks of dynamic range
-            lightDistanceEffect = 1.0f / (1.0f + 25.0f * vesselLightRangeRatio * vesselLightRangeRatio);
+            //lightDistanceEffect = 1.0f / (1.0f + 25.0f * vesselLightRangeRatio * vesselLightRangeRatio);
+            /*lightDistanceEffect = 1.0f / 
+                (
+                1.0f
+                + (2 * (vesselAltitude / bodySubRadius))
+                + ((vesselAltitude * vesselAltitude) / (bodySubRadius * bodySubRadius))
+                );*/
+            /*
+            lightDistanceEffect =
+                ((1.0f - config.curvesMixRatio)
+                / (1.0f + (vesselAltitude / (bodySubRadius * config.nearCurveStrength))))
+                + (config.curvesMixRatio
+                / (1.0f + ((vesselAltitude * vesselAltitude * vesselAltitude) / (bodySubRadius * bodySubRadius * bodySubRadius * config.farCurveStrength))));
+             */
+            lightDistanceEffect =
+                ((1.0f - config.curvesMixRatio)
+                / (1.0f + (vesselAltitude / (bodySubRadius * config.farCurveStrength))))
+                + (config.curvesMixRatio
+                / (1.0f + ((2 * vesselAltitude) / (bodySubRadius * config.nearCurveStrength)) + ((vesselAltitude * vesselAltitude) / (bodySubRadius * bodySubRadius * config.nearCurveStrength * config.nearCurveStrength))));
             // direction of the albedo light relative to the vessel
             visibleLightVesselDirection = (FlightGlobals.ActiveVessel.transform.position - visibleLightPositionAverage).normalized;
 
@@ -313,10 +328,10 @@ namespace PlanetShine
                 ambientLight.vacuumAmbientColor = vacuumColor;
                 if (renderEnabled && !MapView.MapIsEnabled)
                 {
-                    //TODO bring back ambient light mixed with vacuumColor, because ambient light only works on very low altitudes
-                    //TODO find ambientlight fading curve
+                    // Reducing the stock ambientlight to make place for our ambientlight part, according to the ratio
                     RenderSettings.ambientLight = RenderSettings.ambientLight *
                         (1f - (config.groundAmbientOverrideRatio));
+                    // Adding our ambientlight according to the ratio
                     RenderSettings.ambientLight += (atmosphereAmbientEffect * body.albedoColor) *
                         (config.groundAmbientOverrideRatio);
                 }
