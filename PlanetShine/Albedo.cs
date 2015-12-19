@@ -14,19 +14,17 @@ namespace PlanetShine
         public Texture2D combinedTexture;
 
         public CelestialBody targetBody;
-        public int dimension;
+        public int pixelSize;
         public bool active;
-        public float fov = 120f;
-        public Vector3 position;
         public float elevation = 0f;
 
-        public Albedo(int dimension)
+        public Albedo(int pixelSize)
         {
             active = false;
-            this.dimension = dimension;
-            combinedTexture = new Texture2D(dimension, dimension, TextureFormat.RGB24, false);
-            localCamera = new AlbedoCamera(false, LayerMask.LocalScenery, dimension);
-            scaledCamera = new AlbedoCamera(true, LayerMask.ScaledScenery, dimension);
+            this.pixelSize = pixelSize;
+            combinedTexture = new Texture2D(pixelSize, pixelSize, TextureFormat.RGB24, false);
+            localCamera = new AlbedoCamera(false, LayerMask.LocalScenery, pixelSize);
+            scaledCamera = new AlbedoCamera(true, LayerMask.ScaledScenery, pixelSize);
         }
 
         public void Activate(CelestialBody target)
@@ -50,17 +48,22 @@ namespace PlanetShine
             if (!active)
                 return false;
 
+            /*
             position = FlightGlobals.ActiveVessel.transform.position;
             position += (position - targetBody.transform.position).normalized * elevation;
             float distance = (float) (position - targetBody.position).magnitude;
             fov = 2 * Mathf.Rad2Deg * Mathf.Acos(Mathf.Sqrt(Mathf.Max((distance * distance) - (float)(targetBody.Radius * targetBody.Radius), 1)) / distance);
-            float nearClipPlane = Mathf.Max(0.001f, distance - ((float)targetBody.Radius - (float)targetBody.atmosphereDepth) * 1.2f);
+            float nearClipPlane = Mathf.Max(0.001f, distance - (((float)targetBody.Radius - (float)targetBody.atmosphereDepth) * 1.5f));
             float farClipPlane = distance + ((float)targetBody.Radius);
+            */
 
-            localCamera.Update(position, nearClipPlane, farClipPlane);
-            scaledCamera.Update(position, nearClipPlane, farClipPlane);
-            localCamera.camera.fieldOfView = fov;
-            scaledCamera.camera.fieldOfView = fov;
+            //localCamera.Update(position, nearClipPlane, farClipPlane);
+            //scaledCamera.Update(position, nearClipPlane, farClipPlane);
+
+            localCamera.Update(targetBody, elevation);
+            scaledCamera.Update(targetBody, elevation);
+            //localCamera.camera.fieldOfView = fov;
+            //scaledCamera.camera.fieldOfView = fov;
             return true;
         }
 
@@ -95,8 +98,8 @@ namespace PlanetShine
 
         public Color ExtractColor(float ratio = 1f)
         {
-            int size = (int)(dimension * ratio);
-            int position = (int)((dimension / 2f) * (1f - ratio));
+            int size = (int)(pixelSize * ratio);
+            int position = (int)((pixelSize / 2f) * (1f - ratio));
             return combinedTexture.GetAverageColorSlow(position, position, size, size);
         }
     }

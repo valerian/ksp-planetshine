@@ -59,23 +59,34 @@ namespace PlanetShine
             active = false;
         }
 
-        public bool Update(Vector3 position, float nearClipPlane = 0.0001f, float farClipPlane = 200000000f)
+        public bool Update(CelestialBody targetBody, float elevation)
         {
             if (!active)
                 return false;
             if (inScaledSpace)
             {
-                cameraObject.transform.position = ScaledSpace.LocalToScaledSpace(position);
-                cameraObject.transform.LookAt(ScaledSpace.LocalToScaledSpace(targetBody.transform.position));
-                camera.nearClipPlane = ScaledSpace.InverseScaleFactor * nearClipPlane;
-                camera.farClipPlane = ScaledSpace.InverseScaleFactor * farClipPlane;
+                cameraObject.transform.position = ScaledSpace.LocalToScaledSpace(FlightGlobals.ActiveVessel.transform.position);
+                cameraObject.transform.position += (cameraObject.transform.position - targetBody.scaledBody.transform.position).normalized * (ScaledSpace.InverseScaleFactor * elevation);
+                cameraObject.transform.LookAt(targetBody.scaledBody.transform.position);
+
+                float distance = (float)(cameraObject.transform.position - targetBody.scaledBody.transform.position).magnitude;
+                camera.fieldOfView = 2 * Mathf.Rad2Deg * Mathf.Acos(Mathf.Sqrt(Mathf.Max((distance * distance)
+                    - (float)(ScaledSpace.InverseScaleFactor * ScaledSpace.InverseScaleFactor * targetBody.Radius * targetBody.Radius), 1)) / distance);
+
+                camera.nearClipPlane = Mathf.Max(0.001f, distance - (((float)targetBody.Radius - (float)targetBody.atmosphereDepth) * 1.5f * ScaledSpace.InverseScaleFactor));
+                camera.farClipPlane = distance + ((float)targetBody.Radius * ScaledSpace.InverseScaleFactor);
             }
             else
             {
-                cameraObject.transform.position = position;
+                cameraObject.transform.position = FlightGlobals.ActiveVessel.transform.position;
+                cameraObject.transform.position += (cameraObject.transform.position - targetBody.transform.position).normalized * elevation;
                 cameraObject.transform.LookAt(targetBody.transform.position);
-                camera.nearClipPlane = nearClipPlane;
-                camera.farClipPlane = farClipPlane;
+
+                float distance = (float)(cameraObject.transform.position - targetBody.transform.position).magnitude;
+                camera.fieldOfView = 2 * Mathf.Rad2Deg * Mathf.Acos(Mathf.Sqrt(Mathf.Max((distance * distance) - (float)(targetBody.Radius * targetBody.Radius), 1)) / distance);
+
+                camera.nearClipPlane = Mathf.Max(0.001f, distance - (((float)targetBody.Radius - (float)targetBody.atmosphereDepth) * 1.5f));
+                camera.farClipPlane = distance + ((float)targetBody.Radius);
             }
             return true;
         }
