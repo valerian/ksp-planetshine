@@ -40,12 +40,12 @@ namespace PlanetShine
         public static LineRenderer[] debugLineLights = null;
 
         // Albedo renderer
-        public Albedo albedo;
+        public VisualAlbedoDeterminer albedo;
         public float bodyFov = 120f;
 
         // information related to the currently orbiting body
         public CelestialBodiesManager celestialBodiesManager = new CelestialBodiesManager();
-        public Body body;
+        public CelestialBodyData body;
         public float bodySubRadius;
 
         // data for calculating and rendering albedo and ambient lights
@@ -108,7 +108,7 @@ namespace PlanetShine
 
             CreateAlbedoLights();
             CreateDebugLines();
-            albedo = new Albedo(64);
+            albedo = new VisualAlbedoDeterminer(64);
             albedo.elevation = 10000f;
         }
 
@@ -226,6 +226,7 @@ namespace PlanetShine
             atmosphereReflectionRatio = Mathf.Clamp01((vesselAltitude - (body.virtualAtmosphereDepth * config.minAlbedoFadeAltitude))
                                                       / (body.virtualAtmosphereDepth * (config.maxAlbedoFadeAltitude
                                                                        - config.minAlbedoFadeAltitude)));
+
             // albedo light intensity modificator caused by attenuation within atmosphere
             atmosphereReflectionEffect = Mathf.Clamp01((1f - body.atmosphereAmbientLevel) + atmosphereReflectionRatio);
             
@@ -244,6 +245,8 @@ namespace PlanetShine
             bodyFov = 2 * Mathf.Rad2Deg * (float)Math.Acos(Math.Sqrt(Math.Max((vesselBodyDistance * vesselBodyDistance)
                                                                          - (bodySubRadius * bodySubRadius), 1.0f))
                                                                / vesselBodyDistance);
+            
+            // getting a practical angle value to use for the albedo lights directions
             areaSpreadAngle = Math.Min(45f, (visibleLightRatio * (1f - (sunAngle / 180f))) * bodyFov / 2);
 
             // % of the area spread angle, from 0 degrees to 45 degrees
@@ -282,6 +285,8 @@ namespace PlanetShine
             lightIntensity = config.baseAlbedoIntensity / albedoLightsQuantity;
             lightIntensity *= visibleLightRatio * boostedVisibleLightAngleEffect * atmosphereReflectionEffect
                 * lightDistanceEffect * body.albedoIntensity;
+             * 
+             * diff -> visibleLightRatio * boostedVisibleLightAngleEffect
              * */
             //lightIntensity = (config.baseAlbedoIntensity / albedoLightsQuantity) * body.albedoIntensity;
 
@@ -372,11 +377,7 @@ namespace PlanetShine
                 return;
             if (!renderEnabled)
                 return;
-            albedo.Activate(body.celestialBody);
-            albedo.Update();
-            albedo.Render();
-            albedo.Combine();
-            body.albedoColor = albedo.ExtractColor();
+            body.albedoColor = albedo.DetermineColor(body, FlightGlobals.ActiveVessel);
         }
     }
 }

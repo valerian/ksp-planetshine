@@ -43,7 +43,7 @@ namespace PlanetShine
         public bool Render(PlanetShine planetShine)
         {
             configWindowPosition = GUILayout.Window(143751300, configWindowPosition,
-                                         OnConfigWindow, "PlanetShine 0.5.0 - EXPERIMENTAL", windowStyle);
+                                         OnConfigWindow, "PlanetShine 0.5.1 - EXPERIMENTAL", windowStyle);
             if (config.debug && PlanetShine.Instance != null)
             {
                 debugWindowPosition = GUILayout.Window(143751301, debugWindowPosition,
@@ -281,13 +281,12 @@ namespace PlanetShine
             GUILayout.BeginVertical();
 
             
-            if (planetShine.albedo != null && planetShine.albedo.active)
+            if (planetShine.albedo != null)
             {
                 GUILayout.Label("Camera Textures: scaled - local - combined");
                 GUILayout.Space(64);
                 GUI.Box(new Rect(0, 48, 64, 64), planetShine.albedo.scaledCamera.texture);
                 GUI.Box(new Rect(64, 48, 64, 64), planetShine.albedo.localCamera.texture);
-                GUI.Box(new Rect(128, 48, 64, 64), planetShine.albedo.combinedTexture);
             }
             
 

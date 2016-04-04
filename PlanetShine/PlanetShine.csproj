@@ -56,23 +56,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Albedo.cs" />
-    <Compile Include="AlbedoCamera.cs" />
-    <Compile Include="Body.cs" />
-    <Compile Include="CelestialBodiesManager.cs" />
+    <Compile Include="Albedo\AlbedoDeterminer.cs" />
+    <Compile Include="Albedo\ComputedAlbedoDeterminer.cs" />
+    <Compile Include="Albedo\VisualAlbedoDeterminer.cs" />
+    <Compile Include="Albedo\AlbedoCamera.cs" />
+    <Compile Include="CelestialBody\CelestialBodyData.cs" />
+    <Compile Include="CelestialBody\CelestialBodiesManager.cs" />
     <Compile Include="Gui\GuiRenderer.cs" />
-    <Compile Include="Utils\EveCloudLayer.cs" />
-    <Compile Include="Utils\Extensions\ColorExtensions.cs" />
-    <Compile Include="Utils\Extensions\GameDatabaseExtensions.cs" />
-    <Compile Include="Utils\Extensions\TextureExtensions.cs" />
+    <Compile Include="Extensions\ColorExtensions.cs" />
+    <Compile Include="Extensions\GameDatabaseExtensions.cs" />
+    <Compile Include="Extensions\TextureExtensions.cs" />
     <Compile Include="Utils\LayerMask.cs" />
     <Compile Include="Utils\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Config.cs" />
-    <Compile Include="Utils\TextureScale.cs" />
     <Compile Include="Utils\Utils.cs" />
     <Compile Include="Gui\GuiManager.cs" />
-    <Compile Include="Utils\CelestialBodyInfo.cs" />
     <Compile Include="Utils\ToolbarWrapper.cs" />
     <Compile Include="PlanetShine.cs" />
   </ItemGroup>

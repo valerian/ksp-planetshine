@@ -10,9 +10,6 @@ namespace PlanetShine
     {
         public static Texture2D CreateReadable(this Texture2D original)
         {
-            Logger.DebugRam("Texture2D CreateReadable start");
-            Logger.Debug("MipMaps: " + original.mipmapCount);
-
             // Checks
             if (original == null) return null;
             if (original.width == 0 || original.height == 0) return null;
@@ -32,8 +29,6 @@ namespace PlanetShine
             RenderTexture.active = null;
             RenderTexture.ReleaseTemporary(rt);
 
-            Logger.DebugRam("Texture2D CreateReadable end");
-
             // Return
             return finalTexture;
         }
@@ -45,11 +40,8 @@ namespace PlanetShine
 
         public static Color GetAverageColorFast(this Texture2D texture)
         {
-            Logger.DebugRam("Texture2D GetAverageColorFast start");
             texture.Apply(true);
-            Logger.DebugRam("Texture2D GetAverageColorFast applied texture");
             Color[] texColors = texture.GetPixels(texture.mipmapCount - 1);
-            Logger.DebugRam("Texture2D GetAverageColorFast got " + texColors.Length + " pixels");
             int total = texColors.Length;
 
             float r = 0;
@@ -65,9 +57,7 @@ namespace PlanetShine
                 a += pixel.a;
             }
 
-            Logger.DebugRam("Texture2D GetAverageColorFast before null array");
             texColors = null;
-            Logger.DebugRam("Texture2D GetAverageColorFast end");
             return new Color(r / total, g / total, b / total, a / total);  
         }
 
@@ -112,9 +102,7 @@ namespace PlanetShine
 
         public static Color GetAverageColorPartial(this Texture2D texture, int x, int y, int blockWidth, int blockHeight)
         {
-            Logger.DebugRam("Texture2D GetAverageColorPartial start");
             Color[] texColors = texture.GetPixels(x, y, blockWidth, blockHeight);
-            Logger.DebugRam("Texture2D GetAverageColorPartial got " + texColors.Length + " pixels");
             int total = texColors.Length;
 
             float r = 0;
@@ -130,9 +118,7 @@ namespace PlanetShine
                 a += pixel.a;
             }
 
-            Logger.DebugRam("Texture2D GetAverageColorPartial before null array");
             texColors = null;
-            Logger.DebugRam("Texture2D GetAverageColorPartial end");
             return new Color(r / total, g / total, b / total, a / total);
         }
     }

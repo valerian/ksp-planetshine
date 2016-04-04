@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace PlanetShine
 {
-    public class Body
+    public class CelestialBodyData
     {
         public static Color defaultColor { get { return new Color(100f / 256f, 100f / 256f, 100f / 256f); } }
 
@@ -23,20 +23,14 @@ namespace PlanetShine
 
         public Color albedoColor { get; set; }
 
-        public Body(CelestialBody sourceBody)
+        public CelestialBodyData(CelestialBody sourceBody)
         {
-            Logger.DebugRam("Body constructor start");
             celestialBody = sourceBody;
 
             isSun = (Sun.Instance.sun == celestialBody || celestialBody.scaledBody.GetComponentsInChildren<SunShaderController>(true).Length > 0);
 
             LoadDefaults();
             LoadConfig();
-
-            // mandatory cleaning after having instanciated a few textures
-            GC.Collect();
-            Resources.UnloadUnusedAssets();
-            Logger.DebugRam("Body constructor end");
         }
 
         private void LoadDefaults()

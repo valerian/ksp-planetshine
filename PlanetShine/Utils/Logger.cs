@@ -61,25 +61,6 @@ namespace PlanetShine
             }
         }
 
-        [System.Diagnostics.Conditional("DEBUG")]
-        [System.Diagnostics.DebuggerStepThrough]
-        public static void DebugRam(string message)
-        {
-            lock (messages)
-            {
-                GC.Collect();
-                Resources.UnloadUnusedAssets();
-                Profiler.enabled = true;
-                messages.Add(new[] { "Debug RAM " + DateTime.Now.TimeOfDay, message });
-                messages.Add(new[] { "Debug RAM " + DateTime.Now.TimeOfDay,
-                    string.Concat(
-                        "Mono used size: ", Profiler.GetMonoUsedSize(), " KB, ",
-                        "Mono heap size: ", Profiler.GetMonoHeapSize(), " KB, ",
-                        "Total allocated RAM: ", Profiler.GetTotalAllocatedMemory(), " KB"
-                        ) });
-            }
-        }
-
         public static void Log(object obj)
         {
             lock (messages)
@@ -147,6 +128,25 @@ namespace PlanetShine
             lock (messages)
             {
                 messages.Add(new[] { "Debug " + DateTime.Now.TimeOfDay, message });
+            }
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        [System.Diagnostics.DebuggerStepThrough]
+        public static void DebugRam(string message)
+        {
+            lock (messages)
+            {
+                GC.Collect();
+                Resources.UnloadUnusedAssets();
+                Profiler.enabled = true;
+                messages.Add(new[] { "Debug RAM " + DateTime.Now.TimeOfDay, message });
+                messages.Add(new[] { "Debug RAM " + DateTime.Now.TimeOfDay,
+                    string.Concat(
+                        "Mono used size: ", Profiler.GetMonoUsedSize(), " KB, ",
+                        "Mono heap size: ", Profiler.GetMonoHeapSize(), " KB, ",
+                        "Total allocated RAM: ", Profiler.GetTotalAllocatedMemory(), " KB"
+                        ) });
             }
         }
 

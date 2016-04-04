@@ -7,17 +7,17 @@ namespace PlanetShine
 {
     public class CelestialBodiesManager
     {
-        Dictionary<CelestialBody, Body> bodies;
+        Dictionary<CelestialBody, CelestialBodyData> bodies;
 
         public CelestialBodiesManager()
         {
-            bodies = new Dictionary<CelestialBody, Body>();
+            bodies = new Dictionary<CelestialBody, CelestialBodyData>();
         }
 
-        public Body GetBody(CelestialBody celestialBody)
+        public CelestialBodyData GetBody(CelestialBody celestialBody)
         {
             if (!bodies.ContainsKey(celestialBody))
-                bodies[celestialBody] = new Body(celestialBody);
+                bodies[celestialBody] = new CelestialBodyData(celestialBody);
             return bodies[celestialBody];
         }
     }

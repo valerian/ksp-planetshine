@@ -12,7 +12,6 @@ using System.Collections.Generic;
 using System.Collections;
 using System;
 using System.IO;
-//using System.Diagnostics;
 using UnityEngine;
 
 namespace PlanetShine
@@ -75,7 +74,6 @@ namespace PlanetShine
         public float curvesMixRatio = 0.5f;
         public bool debug = false;
         public int updateFrequency = 1;
-        public Dictionary<CelestialBody, CelestialBodyInfo> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodyInfo>();
 
         public bool stockToolbarEnabled = true;
 
@@ -179,45 +177,6 @@ namespace PlanetShine
 
             if (FlightGlobals.Bodies == null)
                 return;
-
-            foreach (ConfigNode bodySettings in GameDatabase.Instance.GetConfigNodes("PlanetshineCelestialBody"))
-            {
-                LoadBody(bodySettings);
-            }
-        }
-
-        protected void LoadBody(ConfigNode bodySettings)
-        {
-            try
-            {
-                CelestialBody body = FlightGlobals.Bodies.Find(n => n.name == bodySettings.GetValue("name"));
-                if (FlightGlobals.Bodies.Contains(body))
-                {
-                    Color color = ConfigNode.ParseColor(bodySettings.GetValue("color"))
-                        * float.Parse(bodySettings.GetValue("intensity"));
-                    color.r = (color.r / 255f);
-                    color.g = (color.g / 255f);
-                    color.b = (color.b / 255f);
-                    color.a = 1;
-                    if (!config.celestialBodyInfos.ContainsKey(body))
-                        config.celestialBodyInfos.Add(body, new CelestialBodyInfo
-                                                      (
-                                                       color,
-                                                       float.Parse(bodySettings.GetValue("intensity")),
-                                                       float.Parse(bodySettings.GetValue("atmosphereAmbient")),
-                                                       float.Parse(bodySettings.GetValue("groundAmbientOverride")),
-                                                       (bodySettings.HasValue("isSun") ? bool.Parse(bodySettings.GetValue("isSun")) : false)
-                                                       ));
-                }
-            }
-            catch (Exception e)
-            {
-                UnityEngine.Debug.LogError(String.Format(
-                    "[PlanetShine] An exception occured reading CelestialBodyColor node:\n{0}\nThe exception was:\n{1}",
-                    bodySettings,
-                    e
-                ));
-            }
         }
 
         public void SaveSettings()
