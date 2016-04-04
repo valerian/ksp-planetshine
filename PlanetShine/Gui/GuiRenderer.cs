@@ -261,33 +261,14 @@ namespace PlanetShine
         {
             GUILayout.BeginVertical();
 
-            if (planetShine.bodyRimTexture != null)
-            {
-                GUILayout.Label("Atmosphere shader rim color ramp:");
-                GUILayout.Space(48);
-                GUI.Box(new Rect(0, 64, 512, 16), planetShine.body.scaledBody.renderer.sharedMaterial.GetTexture("_rimColorRamp"));
-            }
-
-            GUI.contentColor = planetShine.bodyColor;
-            VariableDebugLabel("bodyColor", planetShine.bodyColor);
-            GUI.contentColor = originalTextColor;
-
-            GUI.contentColor = planetShine.bodyTextureColor;
-            VariableDebugLabel("bodyTextureColor", planetShine.bodyTextureColor);
-            GUI.contentColor = originalTextColor;
-
-            GUI.contentColor = planetShine.bodyAtmosphereColor;
-            VariableDebugLabel("bodyAtmosphereColor", planetShine.bodyAtmosphereColor);
-            GUI.contentColor = originalTextColor;
-
-            GUI.contentColor = planetShine.body.atmosphericAmbientColor;
-            VariableDebugLabel("atmosphericAmbientColor (stock)", planetShine.body.atmosphericAmbientColor);
-            GUI.contentColor = originalTextColor;
-
 
             VariableDebugLabel("MapView.MapIsEnabled", MapView.MapIsEnabled);
             VariableDebugLabel("performanceTimerLast", planetShine.performanceTimerLast);
             VariableDebugLabel("body.name", planetShine.body.name);
+
+            GUI.contentColor = planetShine.bodyColor;
+            VariableDebugLabel("bodyColor", planetShine.bodyColor);
+            GUI.contentColor = originalTextColor;
 
             VariableDebugLabel("bodyAtmosphereAmbient", planetShine.bodyAtmosphereAmbient);
             VariableDebugLabel("bodyIntensity", planetShine.bodyIntensity);
