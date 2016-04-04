@@ -12,6 +12,7 @@ using System.Collections;
 using System;
 using System.IO;
 using UnityEngine;
+using KSP.UI.Screens;
 
 
 namespace PlanetShine

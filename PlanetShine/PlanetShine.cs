@@ -128,12 +128,11 @@ namespace PlanetShine
                 if (albedoLights[i] != null)
                     Destroy (albedoLights[i]);
                 albedoLights[i] = new GameObject();
-                albedoLights[i].AddComponent<Light>();
-                albedoLights[i].light.type = LightType.Directional;
-                albedoLights[i].light.cullingMask = (1 << 0);
-                albedoLights[i].light.shadows = LightShadows.Soft;
-                albedoLights[i].light.shadowStrength = 1.0f;
-                albedoLights[i].light.shadowSoftness = 20.0f;
+                Light light = albedoLights[i].AddComponent<Light>();
+                light.type = LightType.Directional;
+                light.cullingMask = (1 << 0);
+                light.shadows = LightShadows.Soft;
+                light.shadowStrength = 1.0f;
                 albedoLights[i].AddComponent<MeshRenderer>();
             }
         }
@@ -182,12 +181,12 @@ namespace PlanetShine
                 if (albedoLightsQuantity > 1) {
                     debugLineLights[i].enabled = config.debug;
                     debugLineLights[i].SetPosition( 0, FlightGlobals.ActiveVessel.transform.position
-                                                    - albedoLight.light.transform.forward * 10000 );
+                                                    - albedoLight.GetComponent<Light>().transform.forward * 10000 );
                     debugLineLights[i].SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );                           
                 } else {
                     debugLineLights[1].enabled = config.debug;
                     debugLineLights[1].SetPosition( 0, FlightGlobals.ActiveVessel.transform.position
-                                                    - albedoLight.light.transform.forward * 10000 );
+                                                    - albedoLight.GetComponent<Light>().transform.forward * 10000);
                     debugLineLights[1].SetPosition( 1, FlightGlobals.ActiveVessel.transform.position );         
                 }
                 i++;
@@ -272,27 +271,27 @@ namespace PlanetShine
             int i = 0;
             foreach (GameObject albedoLight in albedoLights){
                 if (config.useVertex && !bodyIsSun)
-                    albedoLight.light.renderMode = LightRenderMode.ForceVertex;
+                    albedoLight.GetComponent<Light>().renderMode = LightRenderMode.ForceVertex;
                 else
-                    albedoLight.light.renderMode = LightRenderMode.ForcePixel;
-                albedoLight.light.intensity = lightIntensity;
-                albedoLight.light.transform.forward = visibleLightVesselDirection;
+                    albedoLight.GetComponent<Light>().renderMode = LightRenderMode.ForcePixel;
+                albedoLight.GetComponent<Light>().intensity = lightIntensity;
+                albedoLight.GetComponent<Light>().transform.forward = visibleLightVesselDirection;
                 // Spread the lights, but only if there are more than one
-                if (albedoLightsQuantity > 1 ) { 
-                    albedoLight.light.transform.forward = Quaternion.AngleAxis (areaSpreadAngle,
+                if (albedoLightsQuantity > 1 ) {
+                    albedoLight.GetComponent<Light>().transform.forward = Quaternion.AngleAxis(areaSpreadAngle,
                                                                                 Vector3.Cross (bodyVesselDirection,
                                                                                                bodySunDirection).normalized)
-                        * albedoLight.light.transform.forward;
-                    albedoLight.light.transform.forward = Quaternion.AngleAxis (i * (360f / albedoLightsQuantity),
+                        * albedoLight.GetComponent<Light>().transform.forward;
+                    albedoLight.GetComponent<Light>().transform.forward = Quaternion.AngleAxis(i * (360f / albedoLightsQuantity),
                                                                                 visibleLightVesselDirection)
-                        * albedoLight.light.transform.forward;
+                        * albedoLight.GetComponent<Light>().transform.forward;
                 }
-                      
-                albedoLight.light.color = bodyColor;
+
+                albedoLight.GetComponent<Light>().color = bodyColor;
                 if (renderEnabled && (i < albedoLightsQuantity) && !MapView.MapIsEnabled) {
-                    albedoLight.light.enabled = true;
+                    albedoLight.GetComponent<Light>().enabled = true;
                 } else
-                    albedoLight.light.enabled = false;
+                    albedoLight.GetComponent<Light>().enabled = false;
                 i++;
             }
         }
