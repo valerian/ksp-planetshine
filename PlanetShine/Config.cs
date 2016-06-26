@@ -1,4 +1,4 @@
-﻿/*
+/*
 * (C) Copyright 2014, Valerian Gaudeau
 * 
 * Kerbal Space Program is Copyright (C) 2013 Squad. See http://kerbalspaceprogram.com/. This
@@ -31,21 +31,24 @@ namespace PlanetShine
             }
         }
 
+        public bool blizzyToolbarInstalled = false;
+        public bool kopernicusInstalled = false;
+
         public static string[] qualityLabels = {"Low", "Medium", "High"};
         public static int maxAlbedoLightsQuantity = 4;
 
         public int quality { get; private set; }
         public bool useVertex = false;
         public int albedoLightsQuantity = 4;
-        public float baseAlbedoIntensity = 0.2f;
-        public float vacuumLightLevel = 0.02f;
-        public float baseGroundAmbient = 0.50f;
-        public float groundAmbientOverrideRatio = 0.5f;
+        public float baseAlbedoIntensity = 0.24f;
+        public float vacuumLightLevel = 0.03f;
+        public float baseGroundAmbient = 0.60f;
+        public float groundAmbientOverrideRatio = 0.60f;
         public float minAlbedoFadeAltitude = 0.02f;
         public float maxAlbedoFadeAltitude = 0.10f;
         public float minAmbientFadeAltitude = 0.00f;
-        public float maxAmbientFadeAltitude = 0.08f;
-        public float albedoRange = 8f;
+        public float maxAmbientFadeAltitude = 0.10f;
+        public float albedoRange = 10f;
         public bool debug = false;
         public int updateFrequency = 1;
         public Dictionary<CelestialBody, CelestialBodyInfo> celestialBodyInfos = new Dictionary<CelestialBody, CelestialBodyInfo>();
@@ -82,15 +85,15 @@ namespace PlanetShine
     {
         private ConfigDefaults(){}
 
-        public static float baseAlbedoIntensity = 0.22f;
+        public static float baseAlbedoIntensity = 0.24f;
         public static float vacuumLightLevel = 0.03f;
-        public static float baseGroundAmbient = 0.50f;
-        public static float groundAmbientOverrideRatio = 0.5f;
+        public static float baseGroundAmbient = 0.60f;
+        public static float groundAmbientOverrideRatio = 0.60f;
         public static float minAlbedoFadeAltitude = 0.02f;
         public static float maxAlbedoFadeAltitude = 0.10f;
         public static float minAmbientFadeAltitude = 0.00f;
-        public static float maxAmbientFadeAltitude = 0.08f;
-        public static float albedoRange = 8f;
+        public static float maxAmbientFadeAltitude = 0.10f;
+        public static float albedoRange = 10f;
     }
 
     
@@ -102,13 +105,21 @@ namespace PlanetShine
         private ConfigNode configFile;
         private ConfigNode configFileNode;
 
-        public void Start()
+        public void Awake()
         {
             if (Instance != null)
                 Destroy (Instance.gameObject);
             Instance = this;
 
             LoadSettings ();
+
+            foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
+            {
+                if (assembly.name == "Toolbar")
+                    config.blizzyToolbarInstalled = true;
+                if (assembly.name == "Kopernicus")
+                    config.kopernicusInstalled = true;
+            }
         }
             
         public void LoadSettings()
@@ -139,11 +150,6 @@ namespace PlanetShine
             if (FlightGlobals.Bodies == null)
                 return;
 
-            foreach (ConfigNode bodySettings in GameDatabase.Instance.GetConfigNodes("CelestialBodyColor")) // Kept for retro-compatibility, will be removed soon
-            {
-                LoadBody(bodySettings);
-            }
-
             foreach (ConfigNode bodySettings in GameDatabase.Instance.GetConfigNodes("PlanetshineCelestialBody"))
             {
                 LoadBody(bodySettings);
@@ -169,7 +175,8 @@ namespace PlanetShine
                                                        color,
                                                        float.Parse(bodySettings.GetValue("intensity")),
                                                        float.Parse(bodySettings.GetValue("atmosphereAmbient")),
-                                                       float.Parse(bodySettings.GetValue("groundAmbientOverride"))
+                                                       float.Parse(bodySettings.GetValue("groundAmbientOverride")),
+                                                       (bodySettings.HasValue("isSun") ? bool.Parse(bodySettings.GetValue("isSun")) : false)
                                                        ));
                 }
             }

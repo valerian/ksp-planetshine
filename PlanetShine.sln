@@ -16,6 +16,6 @@ Global
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = PlanetShine\PlanetShine.csproj
-		version = 0.2.2
+		version = 0.2.4.2
 	EndGlobalSection
 EndGlobal
