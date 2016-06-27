@@ -40,7 +40,7 @@ namespace PlanetShine
         public bool Render(PlanetShine planetShine)
         {
             configWindowPosition = GUILayout.Window(143751300, configWindowPosition,
-                                         OnConfigWindow, "PlanetShine 0.2.5.0 - Beta", windowStyle);
+                                         OnConfigWindow, "PlanetShine 0.2.5.1 - Beta", windowStyle);
             if (config.debug && PlanetShine.Instance != null)
             {
                 debugWindowPosition = GUILayout.Window(143751301, debugWindowPosition,

@@ -124,7 +124,7 @@ namespace PlanetShine
             
         public void LoadSettings()
         {
-            configFile = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
+            configFile = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Plugins/PluginData/Settings.cfg");
             configFileNode = configFile.GetNode("PlanetShine");
 
             if (bool.Parse (configFileNode.GetValue ("useAreaLight")))
@@ -206,9 +206,8 @@ namespace PlanetShine
             configFileNode.SetValue("updatefrequency", config.updateFrequency.ToString());
             configFileNode.SetValue("quality", config.quality.ToString());
             configFileNode.SetValue("stockToolbarEnabled", config.stockToolbarEnabled ? "True" : "False");
-            configFile.Save(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Config/Settings.cfg");
+            configFile.Save(KSPUtil.ApplicationRootPath + "GameData/PlanetShine/Plugins/PluginData/Settings.cfg");
         }
 
     }
 }
-
